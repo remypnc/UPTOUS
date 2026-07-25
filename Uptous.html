@@ -82,7 +82,7 @@
             <input value="{{ ob.password }}" onInput="{{ onObPass }}" placeholder="••••" style="width:100%;padding:14px 16px;border:2px solid #ece0d6;border-radius:12px;font-size:15px;background:#fff;outline:none;margin-top:6px"/></div>
           </div>
           <button onClick="{{ obShuffleCode }}" style="background:none;border:none;color:#c26a4a;font-size:13px;margin-top:10px;cursor:pointer;font-weight:600">↻ tirer un autre code</button>
-          <label style="font-size:13px;font-weight:600;color:#a2938a;display:block;margin-top:10px">Code modèle <span style="font-weight:400;color:#b7a89e">· facultatif</span></label>
+          <label style="font-size:13px;font-weight:600;color:#a2938a;display:block;margin-top:10px">Code modèle <span onClick="{{ obFillTemplate }}" style="font-weight:700;color:#c26a4a;cursor:pointer;margin-left:8px">⚡ Charger la démo ("1812")</span></label>
           <input value="{{ ob.template }}" onInput="{{ onObTemplate }}" placeholder="charger des listes déjà prêtes" style="width:100%;padding:12px 16px;border:2px dashed #e0cdc0;border-radius:12px;font-size:14px;background:#fbf5f0;outline:none;margin-top:6px"/>
           <sc-if value="{{ ob.error }}" hint-placeholder-val=""><div style="color:#bb4b30;font-size:13px;margin-top:8px">{{ ob.error }}</div></sc-if>
           <button onClick="{{ obDoCreate }}" style="margin-top:18px;width:100%;background:#c26a4a;color:#fff;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;cursor:pointer">Créer la room</button>
@@ -208,7 +208,7 @@
       <sc-if value="{{ tabParcours }}" hint-placeholder-val="">
         <div style="animation:riseIn .35s ease both">
           <div style="font-family:'Instrument Serif',serif;font-size:28px;margin-bottom:2px">Parcours</div>
-          <p style="color:#8b7d74;font-size:13px;margin:0 0 14px">Lance chaque carte au bon moment. L'invité·e ne voit que ce que tu lances.</p>
+          <p style="color:#8b7d74;font-size:13px;margin:0 0 14px">{{ parcoursSub }}</p>
           <div style="height:7px;background:#ece0d6;border-radius:8px;overflow:hidden;margin-bottom:18px"><div style="height:100%;width:{{ progressPct }};background:#c26a4a;border-radius:8px;transition:width .5s"></div></div>
           <sc-if value="{{ noSteps }}" hint-placeholder-val=""><div style="text-align:center;color:#a89a90;padding:30px 10px;font-size:13px">Aucune étape. Ajoute-les depuis <b>Historique › modifier</b>.</div></sc-if>
           <sc-for list="{{ steps }}" as="st" hint-placeholder-count="6">
@@ -217,15 +217,36 @@
                 <div style="width:30px;height:30px;border-radius:50%;background:{{ st.dotBg }};color:{{ st.dotFg }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ st.num }}</div>
                 <div style="flex:1;width:2px;background:#ece0d6;margin:2px 0"></div>
               </div>
-              <div style="flex:1;background:#fff;border:1px solid #f0e6dd;border-radius:14px;padding:13px 15px;margin-bottom:10px;box-shadow:0 4px 12px rgba(160,120,90,.05)">
+              <div onClick="{{ st.onToggleExpand }}" style="flex:1;background:#fff;border:1px solid #f0e6dd;border-radius:14px;padding:13px 15px;margin-bottom:10px;box-shadow:0 4px 12px rgba(160,120,90,.05);cursor:pointer">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
                   <div style="font-weight:700;font-size:15px">{{ st.title }}</div>
                   <div style="font-size:11px;font-weight:700;color:{{ st.statusFg }};background:{{ st.statusBg }};padding:3px 9px;border-radius:9px;white-space:nowrap">{{ st.statusLabel }}</div>
                 </div>
                 <div style="color:#8b7d74;font-size:12.5px;margin-top:3px">{{ st.detail }}</div>
+                
+                <sc-if value="{{ st.answered }}" hint-placeholder-val="">
+                  <sc-if value="{{ st.isExpanded }}" hint-placeholder-val="">
+                    <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #ece0d6;font-size:13px;animation:riseIn .2s ease both">
+                      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                        <span style="color:#8b7d74">{{ st.hostName }} :</span>
+                        <span style="font-weight:700;color:#3f3733">{{ st.hostAns }}</span>
+                      </div>
+                      <div style="display:flex;justify-content:space-between">
+                        <span style="color:#8b7d74">{{ st.guestName }} :</span>
+                        <span style="font-weight:700;color:#3f3733">{{ st.guestAns }}</span>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ st.isCollapsed }}" hint-placeholder-val="">
+                    <div style="font-size:11px;color:#c26a4a;margin-top:6px;font-weight:700">Afficher les votes (cliquer)</div>
+                  </sc-if>
+                </sc-if>
+
                 <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:11px">
                   <sc-if value="{{ st.canLaunch }}" hint-placeholder-val=""><button onClick="{{ st.onLaunch }}" style="background:#f7ddd3;border:none;color:#c26a4a;font-size:12.5px;padding:7px 13px;border-radius:10px;cursor:pointer;font-weight:700">{{ st.launchLabel }} →</button></sc-if>
-                  <button onClick="{{ st.onDone }}" style="background:{{ st.doneBg }};border:none;color:{{ st.doneFg }};font-size:12.5px;padding:7px 12px;border-radius:10px;cursor:pointer;font-weight:600">{{ st.doneLabel }}</button>
+                  <sc-if value="{{ isHost }}" hint-placeholder-val="{{ true }}">
+                    <button onClick="{{ st.onDone }}" style="background:{{ st.doneBg }};border:none;color:{{ st.doneFg }};font-size:12.5px;padding:7px 12px;border-radius:10px;cursor:pointer;font-weight:600">{{ st.doneLabel }}</button>
+                  </sc-if>
                 </div>
               </div>
             </div>
@@ -451,7 +472,8 @@
         <button onClick="{{ navResults }}" style="flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ colResults }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span style="font-size:10.5px;font-weight:700">Résultats</span></button>
       </sc-if>
       <sc-if value="{{ isGuest }}" hint-placeholder-val="">
-        <button onClick="{{ navLive }}" style="flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ colLive }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M10 9l5 3-5 3z"/></svg><span style="font-size:10.5px;font-weight:700">À jouer</span></button>
+        <button onClick="{{ navParcours }}" style="flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ colParcours }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18.5" r="2.2"/><circle cx="18" cy="5.5" r="2.2"/><path d="M8.2 17.6h6a3.1 3.1 0 0 0 0-6.2h-4.4a3.1 3.1 0 0 1 0-6.2H16"/></svg><span style="font-size:10.5px;font-weight:700">Parcours</span></button>
+        <button onClick="{{ navLive }}" style="flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ colLive }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="4" width="12" height="16" rx="2"/><path d="M4 7v11a2 2 0 0 0 2 2h9"/></svg><span style="font-size:10.5px;font-weight:700">À jouer</span></button>
         <button onClick="{{ navResults }}" style="flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ colResults }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span style="font-size:10.5px;font-weight:700">Résultats</span></button>
       </sc-if>
     </div>
@@ -502,7 +524,7 @@ function defQuestions(){
 function emptyTier(){ const t={pool:[]}; RANKS.forEach(r=>t[r]=[]); return t; }
 function blankOuting(title){
   return {id:'o_'+uid(), title:title||'Nouvelle sortie', date:new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}),
-    catalog:emptyCatalog(), forced:[], questions:defQuestions(), timeline:[], answers:{}, favorites:{host:{},guest:{}}, tested:[], tier:{host:emptyTier(),guest:emptyTier()}, status:'draft'};
+    catalog:fullCatalog(), forced:[], questions:defQuestions(), timeline:[], answers:{}, favorites:{host:{},guest:{}}, tested:[], tier:{host:emptyTier(),guest:emptyTier()}, status:'draft'};
 }
 function templateOuting(title){
   const cat=fullCatalog();
@@ -534,7 +556,16 @@ class Component extends DCLogic {
     play:null, confetti:false, toast:'',
     editOutingId:null, prepCat:'sale', newItem:{name:'',emoji:''}, newDuel:{a:'',b:''}, newStep:'', editTpl:'',
     tierView:'host', tierSel:null,
+    expandedSteps:{},
   };
+  toggleStep(id){
+    this.setState(st => ({
+      expandedSteps: {
+        ...st.expandedSteps,
+        [id]: !st.expandedSteps[id]
+      }
+    }));
+  }
   componentDidMount(){
     let s=null; try{ s=JSON.parse(localStorage.getItem('sortie_session2')||'null'); }catch(e){}
     if(s && s.code){ const all=this.allRooms(); let room=all[s.code]; if(room){ room=this.normalizeRoom(room); all[s.code]=room; this.saveRooms(all); this.setState({room, me:s.me, turnPlayer: room.mode==='solo'?'guest':s.me, screen:'app', tab: s.me==='host'?'parcours':'live'}); } }
@@ -644,6 +675,7 @@ class Component extends DCLogic {
     V.obBack=()=>{ const b={name:'welcome',action:'name',create:'action',join:'action',mode:'action'}; this.setState({ob:{...ob,step:b[ob.step]||'welcome',error:''}}); };
     V.onObPseudo=e=>this.obSet('pseudo',e.target.value); V.onObPartner=e=>this.obSet('partner',e.target.value); V.onObTitle=e=>this.obSet('title',e.target.value);
     V.onObCode=e=>this.obSet('code',e.target.value.toUpperCase().slice(0,4)); V.onObPass=e=>this.obSet('password',e.target.value); V.onObTemplate=e=>this.obSet('template',e.target.value);
+    V.obFillTemplate=()=>this.obSet('template','1812');
     V.obToAction=()=>{ if(!ob.pseudo.trim())return; this.setState({ob:{...ob,step:'action'}}); };
     V.obPickCreate=()=>this.setState({ob:{...ob,action:'create',step:'create',code:ob.code||this.randCode()}});
     V.obPickJoin=()=>this.setState({ob:{...ob,action:'join',step:'join'}});
@@ -674,8 +706,9 @@ class Component extends DCLogic {
 
       const tab=st.tab;
       V.playActive=!!st.play; V.notPlaying=!st.play; V.play=st.play;
-      V.tabParcours=this.isHost()&&tab==='parcours'; V.tabJouer=this.isHost()&&tab==='jouer'; V.tabHistory=this.isHost()&&tab==='history'; V.tabResults=tab==='results'; V.tabLive=!this.isHost()&&tab==='live';
+      V.tabParcours=tab==='parcours'; V.tabJouer=this.isHost()&&tab==='jouer'; V.tabHistory=this.isHost()&&tab==='history'; V.tabResults=tab==='results'; V.tabLive=!this.isHost()&&tab==='live';
       V.navParcours=()=>this.setState({tab:'parcours'}); V.navJouer=()=>this.setState({tab:'jouer'}); V.navHistory=()=>this.setState({tab:'history',editOutingId:null}); V.navResults=()=>this.setState({tab:'results'}); V.navLive=()=>this.setState({tab:'live'});
+      V.parcoursSub = this.isHost() ? "Lance chaque carte au bon moment. L'invité·e ne voit que ce que tu lances." : "Le fil conducteur de votre sortie culinaire.";
       const ac='#c26a4a', inac='#bcaea4';
       V.colParcours=tab==='parcours'?ac:inac; V.colJouer=tab==='jouer'?ac:inac; V.colHistory=tab==='history'?ac:inac; V.colResults=tab==='results'?ac:inac; V.colLive=tab==='live'?ac:inac;
 
@@ -694,18 +727,75 @@ class Component extends DCLogic {
       // parcours
       V.progressPct=ao.timeline.length? Math.round(ao.timeline.filter(s=>s.done).length/ao.timeline.length*100)+'%':'0%';
       V.noSteps=ao.timeline.length===0;
-      V.steps=ao.timeline.map((s,idx)=>{ const ans = s.kind==='question'? ao.answers[s.ref] : (s.kind==='forced'? ao.favorites : null);
-        const answered = s.kind==='question' ? !!(ao.answers[s.ref]&&Object.keys(ao.answers[s.ref]).length) : (s.kind==='forced'? !!(ao.favorites.guest&&ao.favorites.guest[ (ao.forced.find(f=>f.id===s.ref)||{}).cat ]) : false);
+      V.steps=ao.timeline.map((s,idx)=>{
+        let answered = false;
+        let hostAns = 'En attente…';
+        let guestAns = 'En attente…';
+        
+        if (s.kind === 'question') {
+          const q = ao.questions.find(x => x.id === s.ref);
+          const ansObj = ao.answers[s.ref] || {};
+          answered = !!(ansObj.host || ansObj.guest);
+          
+          if (q) {
+            if (ansObj.host) {
+              const opt = q.a.id === ansObj.host ? q.a : (q.b.id === ansObj.host ? q.b : null);
+              if (opt) hostAns = opt.emoji + ' ' + opt.name;
+            }
+            if (ansObj.guest) {
+              const opt = q.a.id === ansObj.guest ? q.a : (q.b.id === ansObj.guest ? q.b : null);
+              if (opt) guestAns = opt.emoji + ' ' + opt.name;
+            }
+          }
+        } else if (s.kind === 'forced') {
+          const f = ao.forced.find(x => x.id === s.ref);
+          if (f) {
+            const hostChoiceId = ao.favorites.host && ao.favorites.host[f.cat];
+            const guestChoiceId = ao.favorites.guest && ao.favorites.guest[f.cat];
+            answered = !!(hostChoiceId || guestChoiceId);
+            
+            if (hostChoiceId) {
+              const item = findItem(ao.catalog, hostChoiceId);
+              if (item) hostAns = item.emoji + ' ' + item.name;
+            }
+            if (guestChoiceId) {
+              const item = findItem(ao.catalog, guestChoiceId);
+              if (item) guestAns = item.emoji + ' ' + item.name;
+            }
+          }
+        }
+
         const done=s.done;
         let statusLabel='à faire', sf='#a2938a', sb='#f2ece7';
         if(s.kind!=='place'&&!answered){ statusLabel='à lancer'; sf='#c79a3f'; sb='#fbefd9'; }
         if(answered&&!done){ statusLabel='répondu'; sf='#5f86a8'; sb='#e7f0f6'; }
         if(done){ statusLabel='terminé'; sf='#4c7d5b'; sb='#e4ede2'; }
-        return {...s, num:idx+1, statusLabel, statusFg:sf, statusBg:sb,
-          dotBg: done?'#6f9a7d':(s.kind!=='place'&&!answered?'#e6c46a':'#ece0d6'), dotFg:(done||(s.kind!=='place'&&!answered))?'#fff':'#a2938a',
-          canLaunch: s.kind!=='place', launchLabel: answered?'Relancer le quiz':'Lancer le quiz',
+        
+        return {
+          ...s,
+          num:idx+1,
+          statusLabel,
+          statusFg:sf,
+          statusBg:sb,
+          answered,
+          hostName: this.pname('host'),
+          guestName: this.pname('guest'),
+          hostAns,
+          guestAns,
+          isExpanded: answered && st.expandedSteps[s.id],
+          isCollapsed: answered && !st.expandedSteps[s.id],
+          onToggleExpand: () => this.toggleStep(s.id),
+          dotBg: done?'#6f9a7d':(s.kind!=='place'&&!answered?'#e6c46a':'#ece0d6'),
+          dotFg:(done||(s.kind!=='place'&&!answered))?'#fff':'#a2938a',
+          canLaunch: s.kind!=='place' && this.isHost(),
+          launchLabel: answered?'Relancer le quiz':'Lancer le quiz',
           onLaunch:()=>this.launchStep(s),
-          doneLabel: done?'✓ terminé':'Marquer terminé', doneBg: done?'#e4ede2':'#f4ede6', doneFg: done?'#4c7d5b':'#7a6c64', onDone:()=>this.stepDone(s.id)}; });
+          doneLabel: done?'✓ terminé':'Marquer terminé',
+          doneBg: done?'#e4ede2':'#f4ede6',
+          doneFg: done?'#4c7d5b':'#7a6c64',
+          onDone:()=>this.stepDone(s.id)
+        };
+      });
 
       // jouer
       V.noForced=ao.forced.length===0;
