@@ -1,0 +1,6 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/Appli de duels culinaires/Sortie a Deux.dc.html" }
+  ]
+}
