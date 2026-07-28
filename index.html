@@ -365,10 +365,6 @@
       };
 
       const handleCreateRoom = async () => {
-        if (!obPseudo.trim()) {
-          setObError("Un pseudo est requis");
-          return;
-        }
         setLoading(true);
         const code = randCode();
         setObCode(code);
@@ -390,9 +386,12 @@
         setLoading(true);
         const hostId = 'p_' + uid();
         const guestId = 'p_' + uid();
-        const players = [{ id: hostId, name: obPseudo.trim(), role: 'host' }];
+        
+        const hostName = obPseudo.trim() || 'Host';
+        const players = [{ id: hostId, name: hostName, role: 'host' }];
         if (obMode === 'solo') {
-          players.push({ id: guestId, name: obPartner.trim() || 'Invité·e', role: 'guest' });
+          const partnerName = obPartner.trim() || 'User 1';
+          players.push({ id: guestId, name: partnerName, role: 'guest' });
         }
         
         const firstOuting = obTemplate.trim() === '1812' ? templateOuting(obTitle) : blankOuting(obTitle);
@@ -430,10 +429,6 @@
       };
 
       const handleJoinRoom = async () => {
-        if (!obPseudo.trim()) {
-          setObError("Un pseudo est requis");
-          return;
-        }
         if (!obCode || obCode.length < 4) {
           setObError("Code de room invalide");
           return;
@@ -458,7 +453,15 @@
         }
 
         const guestId = 'p_' + uid();
-        const updatedPlayers = [...fetchedRoom.players, { id: guestId, name: obPseudo.trim(), role: 'guest' }];
+        let guestName = obPseudo.trim();
+        if (!guestName) {
+          let count = 1;
+          while (fetchedRoom.players.some(p => p.name === `User ${count}`)) {
+            count++;
+          }
+          guestName = `User ${count}`;
+        }
+        const updatedPlayers = [...fetchedRoom.players, { id: guestId, name: guestName, role: 'guest' }];
         const updatedRoom = { ...fetchedRoom, players: updatedPlayers };
 
         const ok = await uploadRoom(cloudId, updatedRoom);
@@ -1034,8 +1037,8 @@
                   <button onClick={() => setObStep('welcome')} style={{background:'none',border:'none',color:'#a89a90',fontSize:'15px',padding:0,cursor:'pointer',marginBottom:'26px'}}>← retour</button>
                   <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'32px',marginBottom:'6px'}}>Ton pseudo</div>
                   <p style={{color:'#8b7d74',fontSize:'14px',margin:'0 0 22px'}}>Comment on t'appelle dans le jeu ?</p>
-                  <input value={obPseudo} onChange={e => setObPseudo(e.target.value)} placeholder="ex : Rémy, Sarah..." style={{width:'100%',padding:'16px 18px',border:'2px solid #ece0d6',borderRadius:'14px',fontSize:'16px',background:'#fff',outline:'none',color:'#3f3733',marginBottom:'24px'}}/>
-                  <button onClick={() => setObStep('action')} className="btn-primary" style={{width:'100%',opacity: obPseudo.trim() ? 1 : 0.5}}>Continuer</button>
+                  <input value={obPseudo} onChange={e => setObPseudo(e.target.value)} placeholder="ex : John" style={{width:'100%',padding:'16px 18px',border:'2px solid #ece0d6',borderRadius:'14px',fontSize:'16px',background:'#fff',outline:'none',color:'#3f3733',marginBottom:'24px'}}/>
+                  <button onClick={() => setObStep('action')} className="btn-primary" style={{width:'100%'}}>Continuer</button>
                 </div>
               )}
 
@@ -1096,7 +1099,7 @@
                   </div>
                   
                   {obMode === 'solo' && (
-                    <input value={obPartner} onChange={e => setObPartner(e.target.value)} placeholder="Pseudo de l'autre joueur·se" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',marginBottom:'14px'}}/>
+                    <input value={obPartner} onChange={e => setObPartner(e.target.value)} placeholder="ex : John" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',marginBottom:'14px'}}/>
                   )}
                   
                   <div onClick={() => setObMode('duo')} style={{background:'#fff',border:`2px solid ${obMode==='duo'?'#5f8a6d':'#ece0d6'}`,borderRadius:'16px',padding:'16px',cursor:'pointer',marginBottom:'24px'}}>
