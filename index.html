@@ -1775,7 +1775,7 @@
                 {isMeHost ? (
                   // Host bottoms
                   [
-                    { id: 'parcours', label: 'Parcours', svg: <path d="M8.2 17.6h6a3.1 3.1 0 0 0 0-6.2h-4.4a3.1 3.1 0 0 1 0-6.2H16"/>, wrap: <circle cx="6" cy="18.5" r="2.2"/><circle cx="18" cy="5.5" r="2.2"/> },
+                    { id: 'parcours', label: 'Parcours', svg: <path d="M8.2 17.6h6a3.1 3.1 0 0 0 0-6.2h-4.4a3.1 3.1 0 0 1 0-6.2H16"/>, wrap: <><circle cx="6" cy="18.5" r="2.2"/><circle cx="18" cy="5.5" r="2.2"/></> },
                     { id: 'history', label: 'Historique', svg: <path d="M12 7.5v5l3 2"/>, wrap: <circle cx="12" cy="12" r="8.5"/> },
                     { id: 'results', label: 'Résultats', svg: <path d="M5 20V10M12 20V4M19 20v-7"/> }
                   ].map(tabItem => (
@@ -1790,7 +1790,7 @@
                 ) : (
                   // Guest bottoms
                   [
-                    { id: 'parcours', label: 'Parcours', svg: <path d="M8.2 17.6h6a3.1 3.1 0 0 0 0-6.2h-4.4a3.1 3.1 0 0 1 0-6.2H16"/>, wrap: <circle cx="6" cy="18.5" r="2.2"/><circle cx="18" cy="5.5" r="2.2"/> },
+                    { id: 'parcours', label: 'Parcours', svg: <path d="M8.2 17.6h6a3.1 3.1 0 0 0 0-6.2h-4.4a3.1 3.1 0 0 1 0-6.2H16"/>, wrap: <><circle cx="6" cy="18.5" r="2.2"/><circle cx="18" cy="5.5" r="2.2"/></> },
                     { id: 'live', label: 'À jouer', svg: <path d="M4 7v11a2 2 0 0 0 2 2h9"/>, wrap: <rect x="7" y="4" width="12" height="16" rx="2"/> },
                     { id: 'results', label: 'Résultats', svg: <path d="M5 20V10M12 20V4M19 20v-7"/> }
                   ].map(tabItem => (
