@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Uptous — Balades, Sorties & Quiz Culinaires</title>
   
   <!-- React 18, ReactDOM & Babel Standalone -->
@@ -23,7 +23,16 @@
   
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; padding: 0; font-family: 'Quicksand', system-ui, sans-serif; color: #3f3733; background: #e7ded7; }
+    html, body { 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Quicksand', system-ui, -apple-system, sans-serif; 
+      color: #3f3733; 
+      background: #e7ded7; 
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
     a { color: #c26a4a; text-decoration: none; }
     a:hover { color: #a5502f; }
     input, select, textarea, button { font-family: inherit; }
@@ -32,9 +41,11 @@
     svg { display: block; }
     
     .app-frame {
-      max-width: 440px;
+      max-width: 480px;
+      width: 100%;
       margin: 0 auto;
       min-height: 100vh;
+      min-height: 100dvh;
       background: #f7f1eb;
       position: relative;
       overflow-y: auto;
@@ -42,23 +53,25 @@
       box-shadow: 0 0 60px rgba(90,70,55,.12);
       display: flex;
       flex-direction: column;
+      -webkit-overflow-scrolling: touch;
     }
 
     /* Custom Styled Real Checkboxes */
     .custom-checkbox-container {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       cursor: pointer;
       user-select: none;
+      min-height: 28px;
     }
     .custom-checkbox-input {
       appearance: none;
       -webkit-appearance: none;
-      width: 22px;
-      height: 22px;
-      border: 2px solid #c26a4a;
-      border-radius: 6px;
+      width: 24px;
+      height: 24px;
+      border: 2px solid #a64d2e;
+      border-radius: 7px;
       outline: none;
       cursor: pointer;
       background: #fff;
@@ -68,40 +81,47 @@
       flex-shrink: 0;
     }
     .custom-checkbox-input:checked {
-      background: #c26a4a;
-      border-color: #c26a4a;
+      background: #a64d2e;
+      border-color: #a64d2e;
     }
     .custom-checkbox-input:checked::before {
       content: "✓";
       color: #fff;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 800;
       line-height: 1;
     }
     .custom-checkbox-input:focus-visible {
-      box-shadow: 0 0 0 3px rgba(194, 106, 74, 0.3);
+      box-shadow: 0 0 0 3px rgba(166, 77, 46, 0.3);
     }
     
-    @keyframes shf { 0%{transform:translate(0,0) rotate(0)} 25%{transform:translate(28px,-10px) rotate(8deg)} 50%{transform:translate(-20px,8px) rotate(-6deg)} 75%{transform:translate(15px,-5px) rotate(4deg)} 100%{transform:translate(0,0) rotate(0)} }
-    @keyframes pop { 0%{transform:scale(.92);opacity:0} 60%{transform:scale(1.03)} 100%{transform:scale(1);opacity:1} }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pop { 0%{transform:scale(.94);opacity:0} 60%{transform:scale(1.02)} 100%{transform:scale(1);opacity:1} }
     @keyframes conf { 0%{transform:translateY(-10vh) rotate(0);opacity:1} 100%{transform:translateY(105vh) rotate(540deg);opacity:1} }
-    @keyframes riseIn { 0%{transform:translateY(16px);opacity:0} 100%{transform:translateY(0);opacity:1} }
-    @keyframes pulseGlow { 0%{transform:scale(0.96);opacity:0.8} 100%{transform:scale(1.04);opacity:1} }
+    @keyframes riseIn { 0%{transform:translateY(14px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    @keyframes pulseGlow { 0%{transform:scale(0.95);opacity:0.8} 100%{transform:scale(1.05);opacity:1} }
 
-    .animate-rise { animation: riseIn .35s ease both; }
-    .animate-pop { animation: pop .3s ease both; }
+    .animate-rise { animation: riseIn .3s ease both; }
+    .animate-pop { animation: pop .25s ease both; }
 
     .btn-primary {
       background: #a64d2e;
       color: #fff;
       border: none;
       border-radius: 14px;
-      padding: 15px 18px;
-      font-size: 15.5px;
+      padding: 16px 18px;
+      font-size: 16px;
       font-weight: 700;
       box-shadow: 0 10px 24px rgba(166, 77, 46, .28);
       cursor: pointer;
       transition: all 0.2s;
+      min-height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .btn-primary:hover {
       background: #8e3e23;
@@ -116,12 +136,16 @@
       color: #fff;
       border: none;
       border-radius: 14px;
-      padding: 15px 18px;
-      font-size: 15.5px;
+      padding: 16px 18px;
+      font-size: 16px;
       font-weight: 700;
       box-shadow: 0 10px 24px rgba(95, 138, 109, .28);
       cursor: pointer;
       transition: all 0.2s;
+      min-height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .btn-secondary:hover {
       background: #476c53;
@@ -194,6 +218,14 @@
 
     // BroadcastChannel for cross-tab realtime sync when offline
     const localChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('uptous_rooms_sync') : null;
+
+    // Timeout wrapper helper to prevent any network operation from blocking UI
+    const withTimeout = (promise, ms = 800) => {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+      ]);
+    };
 
     // Seed preset catalog items with enabled checkbox set to true for essentials
     const seedItems = (cat, arr) => arr.map(([n,e,a,defSel])=>({
@@ -296,12 +328,12 @@
       };
     }
 
-    // Cloud & Local Room Sync Engine (Always succeeds!)
+    // Cloud & Local Room Sync Engine (Non-blocking & Instantaneous)
     async function saveRoomToStorage(room) {
       if (!room || !room.code) return false;
       const codeKey = room.code.toUpperCase();
       
-      // Save local first (Guaranteed to work 100%)
+      // Save to localStorage & BroadcastChannel instantly
       try {
         localStorage.setItem(`uptous_room_${codeKey}`, JSON.stringify(room));
         if (localChannel) {
@@ -309,12 +341,12 @@
         }
       } catch(e) {}
 
-      // Save to Firestore if connected
+      // Save to Firestore with non-blocking 800ms max timeout
       if (db) {
         try {
-          await db.collection('rooms').doc(codeKey).set(room, { merge: true });
+          await withTimeout(db.collection('rooms').doc(codeKey).set(room, { merge: true }), 800);
         } catch(e) {
-          console.warn("Firestore setDoc fallback used:", e);
+          console.warn("Firestore setDoc fallback active:", e);
         }
       }
       return true;
@@ -324,17 +356,17 @@
       if (!code) return null;
       const codeKey = code.toUpperCase();
 
-      // Try Firestore first
+      // Try Firestore with 800ms timeout
       if (db) {
         try {
-          const snap = await db.collection('rooms').doc(codeKey).get();
-          if (snap.exists) {
+          const snap = await withTimeout(db.collection('rooms').doc(codeKey).get(), 800);
+          if (snap && snap.exists) {
             const data = snap.data();
             localStorage.setItem(`uptous_room_${codeKey}`, JSON.stringify(data));
             return data;
           }
         } catch(e) {
-          console.warn("Firestore getDoc error, checking localStorage", e);
+          console.warn("Firestore getDoc fallback active:", e);
         }
       }
 
@@ -420,7 +452,7 @@
             value={value}
             onChange={handleTextChange}
             placeholder={placeholder || "Nom ou adresse du lieu (ex: Otacos Rivoli, Paris)"}
-            style={{width:'100%',padding:'11px 13px',border:'1px solid #eeddd3',borderRadius:'10px',fontSize:'13.5px',outline:'none',background:'#fff',color:'#3f3733'}}
+            style={{width:'100%',padding:'12px 14px',border:'1px solid #eeddd3',borderRadius:'11px',fontSize:'14px',outline:'none',background:'#fff',color:'#3f3733',minHeight:'46px'}}
           />
           {showDropdown && suggestions.length > 0 && (
             <div style={{position:'absolute',top:'100%',left:0,right:0,background:'#fff',border:'1px solid #eeddd3',borderRadius:'10px',boxShadow:'0 8px 20px rgba(0,0,0,0.12)',zIndex:120,marginTop:'4px',overflow:'hidden'}}>
@@ -431,10 +463,10 @@
                     onSelectPlace(s);
                     setShowDropdown(false);
                   }}
-                  style={{padding:'9px 12px',borderBottom:'1px solid #f4ede6',cursor:'pointer',fontSize:'12.5px'}}
+                  style={{padding:'10px 12px',borderBottom:'1px solid #f4ede6',cursor:'pointer',fontSize:'13px'}}
                 >
                   <div style={{fontWeight:'700',color:'#3f3733'}}>📍 {s.name}</div>
-                  <div style={{fontSize:'11px',color:'#8b7d74',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.address}</div>
+                  <div style={{fontSize:'11.5px',color:'#8b7d74',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.address}</div>
                 </div>
               ))}
             </div>
@@ -448,18 +480,18 @@
       if (!isOpen) return null;
       return (
         <div style={{position:'fixed',inset:0,background:'rgba(30,25,22,0.5)',backdropFilter:'blur(4px)',zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} className="animate-pop">
-          <div style={{background:'#fff',borderRadius:'20px',width:'100%',maxWidth:'340px',padding:'18px',boxShadow:'0 20px 40px rgba(0,0,0,0.2)'}}>
+          <div style={{background:'#fff',borderRadius:'22px',width:'100%',maxWidth:'340px',padding:'18px',boxShadow:'0 20px 40px rgba(0,0,0,0.2)'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
               <div style={{fontWeight:'700',fontSize:'15px',color:'#3f3733'}}>Choisir un Émoji</div>
-              <button onClick={onClose} style={{background:'none',border:'none',fontSize:'22px',color:'#8b7d74',cursor:'pointer'}}>×</button>
+              <button onClick={onClose} style={{background:'none',border:'none',fontSize:'24px',color:'#8b7d74',cursor:'pointer'}}>×</button>
             </div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(6, 1fr)',gap:'8px',maxHeight:'220px',overflowY:'auto',padding:'4px'}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(6, 1fr)',gap:'8px',maxHeight:'230px',overflowY:'auto',padding:'4px'}}>
               {PRESET_EMOJIS.map(e => (
                 <button
                   key={e}
                   type="button"
                   onClick={() => { onSelect(e); onClose(); }}
-                  style={{fontSize:'22px',background:'#f9f5f0',border:'1px solid #eee0d5',borderRadius:'10px',height:'42px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}
+                  style={{fontSize:'22px',background:'#f9f5f0',border:'1px solid #eee0d5',borderRadius:'10px',height:'44px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}
                 >
                   {e}
                 </button>
@@ -480,18 +512,18 @@
       const [obCode, setObCode] = useState('');
       const [obPassword, setObPassword] = useState('1234');
       const [obTitle, setObTitle] = useState('');
-      const [obMode, setObMode] = useState('duo'); // 'solo' (même tél) vs 'duo' (deux tél)
+      const [obMode, setObMode] = useState('duo');
       const [obGuestName, setObGuestName] = useState('');
       const [obError, setObError] = useState('');
 
       // Application Main State
       const [room, setRoom] = useState(null);
-      const [me, setMe] = useState(null); // Player ID
+      const [me, setMe] = useState(null);
       const [tab, setTab] = useState('parcours');
       const [toast, setToast] = useState('');
       const [confetti, setConfetti] = useState(false);
-      const [play, setPlay] = useState(null); // Live Quiz Modal State
-      const [selectedOptions, setSelectedOptions] = useState([]); // For checkboxes quiz answer selection
+      const [play, setPlay] = useState(null);
+      const [selectedOptions, setSelectedOptions] = useState([]);
       const [roomInfoOpen, setRoomInfoOpen] = useState(false);
 
       // Pseudo Edition
@@ -499,7 +531,7 @@
       const [tempPseudo, setTempPseudo] = useState('');
 
       // Parcours Step Creator State
-      const [newStepKind, setNewStepKind] = useState('place'); // 'place', 'question', 'forced', 'quiz'
+      const [newStepKind, setNewStepKind] = useState('place');
       const [newStepTitle, setNewStepTitle] = useState('');
       const [newStepDetail, setNewStepDetail] = useState('');
       const [newStepAddress, setNewStepAddress] = useState('');
@@ -567,14 +599,17 @@
           try {
             const { code, me: playerMe } = JSON.parse(session);
             setLoading(true);
-            fetchRoomFromStorage(code).then(fetchedRoom => {
-              if (fetchedRoom) {
-                setRoom(fetchedRoom);
-                setMe(playerMe);
-                setScreen('app');
-              }
-              setLoading(false);
-            });
+            fetchRoomFromStorage(code)
+              .then(fetchedRoom => {
+                if (fetchedRoom) {
+                  setRoom(fetchedRoom);
+                  setMe(playerMe);
+                  setScreen('app');
+                }
+              })
+              .finally(() => {
+                setLoading(false);
+              });
           } catch(e) {
             setLoading(false);
           }
@@ -586,7 +621,6 @@
         if (screen === 'app' && room && room.code) {
           const codeKey = room.code.toUpperCase();
           
-          // Firestore listener
           let unsub = null;
           if (db) {
             try {
@@ -609,7 +643,6 @@
             } catch(e) {}
           }
 
-          // BroadcastChannel listener for local tabs
           const handleBroadcast = (e) => {
             if (e.data && e.data.type === 'ROOM_UPDATE' && e.data.code === codeKey) {
               if (isWritingRef.current) return;
@@ -648,15 +681,17 @@
         return s;
       };
 
-      // Create Room Step 1
       const handleCreateRoom = async () => {
         setLoading(true);
-        const code = randCode();
-        setObCode(code);
-        setObPassword('1234');
-        setObTitle(obTitle || 'Balade Gourmande');
-        setObStep('create');
-        setLoading(false);
+        try {
+          const code = randCode();
+          setObCode(code);
+          setObPassword('1234');
+          setObTitle(obTitle || 'Balade Gourmande');
+          setObStep('create');
+        } finally {
+          setLoading(false);
+        }
       };
 
       const proceedToModeSelection = () => {
@@ -666,80 +701,84 @@
       const finishCreateRoom = async () => {
         setLoading(true);
         setObError('');
-        const creatorId = 'p_' + uid();
-        const hostName = capitalize(obPseudo) || 'Hôte Alex';
-        const players = [{ id: creatorId, name: hostName, isHost: true }];
+        try {
+          const creatorId = 'p_' + uid();
+          const hostName = capitalize(obPseudo) || 'Hôte Alex';
+          const players = [{ id: creatorId, name: hostName, isHost: true }];
 
-        if (obMode === 'solo' && obGuestName.trim()) {
-          const guestId = 'p_' + uid();
-          players.push({ id: guestId, name: capitalize(obGuestName), isHost: false });
+          if (obMode === 'solo' && obGuestName.trim()) {
+            const guestId = 'p_' + uid();
+            players.push({ id: guestId, name: capitalize(obGuestName), isHost: false });
+          }
+          
+          const firstOuting = blankOuting(obTitle, creatorId);
+          firstOuting.status = 'current';
+
+          const newRoom = {
+            code: obCode.toUpperCase(),
+            password: obPassword.trim() || '1234',
+            mode: obMode,
+            createdAt: Date.now(),
+            players,
+            outings: [firstOuting],
+            activeOutingId: firstOuting.id,
+            live: null
+          };
+
+          await saveRoomToStorage(newRoom);
+
+          setRoom(newRoom);
+          setMe(creatorId);
+          localStorage.setItem('uptous_session_v3', JSON.stringify({ code: newRoom.code, me: creatorId }));
+          setScreen('app');
+          setTab('parcours');
+          flash(`Room ${newRoom.code} créée avec succès !`);
+        } catch(e) {
+          console.error("Room creation error:", e);
+        } finally {
+          setLoading(false);
         }
-        
-        const firstOuting = blankOuting(obTitle, creatorId);
-        firstOuting.status = 'current';
-
-        const newRoom = {
-          code: obCode.toUpperCase(),
-          password: obPassword.trim() || '1234',
-          mode: obMode,
-          createdAt: Date.now(),
-          players,
-          outings: [firstOuting],
-          activeOutingId: firstOuting.id,
-          live: null
-        };
-
-        // Always succeeds via localStorage / BroadcastChannel / Firestore
-        await saveRoomToStorage(newRoom);
-
-        setRoom(newRoom);
-        setMe(creatorId);
-        localStorage.setItem('uptous_session_v3', JSON.stringify({ code: newRoom.code, me: creatorId }));
-        setScreen('app');
-        setTab('parcours');
-        setLoading(false);
-        flash(`Room ${newRoom.code} créée avec succès !`);
       };
 
-      // Join Room
       const handleJoinRoom = async () => {
         if (!obCode || obCode.length < 4) {
           setObError("Code de room à 4 caractères requis");
           return;
         }
         setLoading(true);
-        const fetchedRoom = await fetchRoomFromStorage(obCode);
-        if (!fetchedRoom) {
-          setObError("Room introuvable avec ce code");
+        try {
+          const fetchedRoom = await fetchRoomFromStorage(obCode);
+          if (!fetchedRoom) {
+            setObError("Room introuvable avec ce code");
+            return;
+          }
+          if (fetchedRoom.password !== obPassword.trim()) {
+            setObError("Mot de passe incorrect");
+            return;
+          }
+
+          const guestId = 'p_' + uid();
+          let guestName = capitalize(obPseudo);
+          if (!guestName) {
+            let count = 1;
+            while (fetchedRoom.players.some(p => p.name === `Participant ${count}`)) count++;
+            guestName = `Participant ${count}`;
+          }
+
+          const updatedPlayers = [...fetchedRoom.players, { id: guestId, name: guestName, isHost: false }];
+          const updatedRoom = { ...fetchedRoom, players: updatedPlayers };
+
+          await saveRoomToStorage(updatedRoom);
+
+          setRoom(updatedRoom);
+          setMe(guestId);
+          localStorage.setItem('uptous_session_v3', JSON.stringify({ code: updatedRoom.code, me: guestId }));
+          setScreen('app');
+          setTab('parcours');
+          flash(`Bienvenue dans la room ${updatedRoom.code} !`);
+        } finally {
           setLoading(false);
-          return;
         }
-        if (fetchedRoom.password !== obPassword.trim()) {
-          setObError("Mot de passe incorrect");
-          setLoading(false);
-          return;
-        }
-
-        const guestId = 'p_' + uid();
-        let guestName = capitalize(obPseudo);
-        if (!guestName) {
-          let count = 1;
-          while (fetchedRoom.players.some(p => p.name === `Participant ${count}`)) count++;
-          guestName = `Participant ${count}`;
-        }
-
-        const updatedPlayers = [...fetchedRoom.players, { id: guestId, name: guestName, isHost: false }];
-        const updatedRoom = { ...fetchedRoom, players: updatedPlayers };
-
-        await saveRoomToStorage(updatedRoom);
-
-        setRoom(updatedRoom);
-        setMe(guestId);
-        localStorage.setItem('uptous_session_v3', JSON.stringify({ code: updatedRoom.code, me: guestId }));
-        setScreen('app');
-        setTab('parcours');
-        setLoading(false);
-        flash(`Bienvenue dans la room ${updatedRoom.code} !`);
       };
 
       const handleLogOut = () => {
@@ -782,7 +821,6 @@
         writeRoom(updatedRoom);
       };
 
-      // Trigger Live Quiz Modal on Participant Phones
       const initPlayFromLive = (live, customRoom) => {
         const r = customRoom || room;
         const currentAo = r.outings.find(o => o.id === r.activeOutingId);
@@ -899,7 +937,6 @@
         flash("Choix enregistré avec succès !");
       };
 
-      // Add Step to Parcours
       const handleCreateStep = () => {
         const currentAo = activeOuting();
         if (!currentAo) return;
@@ -1021,7 +1058,6 @@
         }
       };
 
-      // Add Custom Option to Category Catalog
       const handleAddCategoryOption = () => {
         if (!newOptName.trim()) {
           flash("Entrez le nom de l'option");
@@ -1036,7 +1072,7 @@
           emoji: newOptEmoji || '🍩',
           address: newOptAddress.trim(),
           cat: prepCat,
-          enabled: true, // Activated by default with checkbox checked
+          enabled: true,
           mandatory: false
         };
 
@@ -1084,14 +1120,14 @@
 
       return (
         <div className="app-frame">
-          {/* LOADING OVERLAY */}
+          {/* MODERN SMOOTH LOADING OVERLAY */}
           {loading && (
-            <div style={{position:'fixed',inset:0,background:'rgba(247,241,235,0.88)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',zIndex:400}} className="animate-pop">
-              <div style={{position:'relative',width:'70px',height:'70px',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <div style={{position:'absolute',inset:0,border:'4px solid #ece0d6',borderTop:'4px solid #c26a4a',borderRadius:'50%',animation:'shf 0.9s linear infinite'}}></div>
-                <div style={{fontSize:'30px',animation:'pulseGlow 0.8s infinite alternate'}}>🗺️</div>
+            <div style={{position:'fixed',inset:0,background:'rgba(247,241,235,0.92)',backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',zIndex:500}} className="animate-pop">
+              <div style={{position:'relative',width:'64px',height:'64px',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div style={{width:'64px',height:'64px',border:'4px solid #ebdcd0',borderTopColor:'#a64d2e',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} />
+                <div style={{position:'absolute',fontSize:'24px'}}>🗺️</div>
               </div>
-              <div style={{marginTop:'16px',fontWeight:'700',color:'#3f3733',fontSize:'16px',fontFamily:'"Instrument Serif", serif'}}>Connexion à la room...</div>
+              <div style={{marginTop:'18px',fontWeight:'700',color:'#3f3733',fontSize:'16px',fontFamily:'"Instrument Serif", serif',letterSpacing:'0.5px'}}>Connexion à la room...</div>
             </div>
           )}
 
@@ -1134,7 +1170,7 @@
 
           {/* 1. ONBOARDING SCREEN */}
           {screen === 'onboarding' && (
-            <div style={{minHeight:'100vh',padding:'26px 22px 40px',display:'flex',flexDirection:'column',justifyContent:'center'}} className="animate-rise">
+            <div style={{minHeight:'100vh',minHeight:'100dvh',padding:'26px 22px 40px',display:'flex',flexDirection:'column',justifyContent:'center'}} className="animate-rise">
               
               {obStep === 'welcome' && (
                 <div style={{textAlign:'center'}}>
@@ -1152,7 +1188,7 @@
                   <button onClick={() => setObStep('welcome')} style={{background:'none',border:'none',color:'#a89a90',fontSize:'15px',padding:0,cursor:'pointer',marginBottom:'24px'}}>← retour</button>
                   <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'36px',marginBottom:'6px'}}>Votre Pseudo</div>
                   <p style={{color:'#8b7d74',fontSize:'14px',margin:'0 0 22px'}}>Comment souhaitez-vous vous appeler dans la room ?</p>
-                  <input value={obPseudo} onChange={e => setObPseudo(capitalize(e.target.value))} placeholder="ex: Alex, Hugo, Camille..." style={{width:'100%',padding:'16px 18px',border:'2px solid #ece0d6',borderRadius:'14px',fontSize:'16px',background:'#fff',outline:'none',color:'#3f3733',marginBottom:'24px'}}/>
+                  <input value={obPseudo} onChange={e => setObPseudo(capitalize(e.target.value))} placeholder="ex: Alex, Hugo, Camille..." style={{width:'100%',padding:'16px 18px',border:'2px solid #ece0d6',borderRadius:'14px',fontSize:'16px',background:'#fff',outline:'none',color:'#3f3733',marginBottom:'24px',minHeight:'50px'}}/>
                   <button onClick={() => setObStep('action')} className="btn-primary" style={{width:'100%'}}>Continuer →</button>
                 </div>
               )}
@@ -1181,16 +1217,16 @@
                   <p style={{color:'#8b7d74',fontSize:'13.5px',margin:'0 0 20px'}}>Définissez le nom du parcours et le mot de passe.</p>
                   
                   <label style={{fontSize:'13px',fontWeight:'700',color:'#a2938a'}}>Nom de la balade / du parcours</label>
-                  <input value={obTitle} onChange={e => setObTitle(capitalize(e.target.value))} placeholder="ex : Balade Gourmande Paris" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',margin:'6px 0 14px'}}/>
+                  <input value={obTitle} onChange={e => setObTitle(capitalize(e.target.value))} placeholder="ex : Balade Gourmande Paris" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',margin:'6px 0 14px',minHeight:'48px'}}/>
                   
                   <div style={{display:'flex',gap:'12px',marginBottom:'14px'}}>
                     <div style={{flex:1}}>
                       <label style={{fontSize:'13px',fontWeight:'700',color:'#a2938a'}}>Code Room</label>
-                      <input value={obCode} onChange={e => setObCode(e.target.value.toUpperCase().slice(0,4))} maxLength={4} style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'18px',letterSpacing:'4px',textAlign:'center',background:'#fcfbf9',color:'#3f3733',fontWeight:'700',marginTop:'6px'}}/>
+                      <input value={obCode} onChange={e => setObCode(e.target.value.toUpperCase().slice(0,4))} maxLength={4} style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'18px',letterSpacing:'4px',textAlign:'center',background:'#fcfbf9',color:'#3f3733',fontWeight:'700',marginTop:'6px',minHeight:'48px'}}/>
                     </div>
                     <div style={{flex:1}}>
                       <label style={{fontSize:'13px',fontWeight:'700',color:'#a2938a'}}>Mot de passe</label>
-                      <input value={obPassword} onChange={e => setObPassword(e.target.value)} placeholder="ex : 1234" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',marginTop:'6px'}}/>
+                      <input value={obPassword} onChange={e => setObPassword(e.target.value)} placeholder="ex : 1234" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',marginTop:'6px',minHeight:'48px'}}/>
                     </div>
                   </div>
 
@@ -1198,7 +1234,7 @@
                 </div>
               )}
 
-              {/* MODE SELECTION SCREEN MATCHING USER SCREENSHOTS */}
+              {/* MODE SELECTION SCREEN */}
               {obStep === 'mode' && (
                 <div>
                   <button onClick={() => setObStep('create')} style={{background:'none',border:'none',color:'#a89a90',fontSize:'15px',padding:0,cursor:'pointer',marginBottom:'20px'}}>← retour</button>
@@ -1228,7 +1264,7 @@
                         value={obGuestName}
                         onChange={e => setObGuestName(e.target.value)}
                         placeholder="ex : John"
-                        style={{width:'100%',padding:'14px 16px',border:'1.5px solid #ece0d6',borderRadius:'12px',fontSize:'14.5px',background:'#fff',outline:'none',color:'#3f3733'}}
+                        style={{width:'100%',padding:'14px 16px',border:'1.5px solid #ece0d6',borderRadius:'12px',fontSize:'14.5px',background:'#fff',outline:'none',color:'#3f3733',minHeight:'48px'}}
                       />
                     </div>
                   )}
@@ -1264,10 +1300,10 @@
                   <p style={{color:'#8b7d74',fontSize:'13.5px',margin:'0 0 20px'}}>Saisissez le code de room et le mot de passe transmis par l'hôte.</p>
                   
                   <label style={{fontSize:'13px',fontWeight:'700',color:'#a2938a'}}>Code de la Room (4 caractères)</label>
-                  <input value={obCode} onChange={e => setObCode(e.target.value.toUpperCase().slice(0,4))} maxLength={4} placeholder="ABCD" style={{width:'100%',padding:'16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'22px',letterSpacing:'6px',textAlign:'center',background:'#fff',outline:'none',fontWeight:'700',margin:'6px 0 14px'}}/>
+                  <input value={obCode} onChange={e => setObCode(e.target.value.toUpperCase().slice(0,4))} maxLength={4} placeholder="ABCD" style={{width:'100%',padding:'16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'22px',letterSpacing:'6px',textAlign:'center',background:'#fff',outline:'none',fontWeight:'700',margin:'6px 0 14px',minHeight:'52px'}}/>
                   
                   <label style={{fontSize:'13px',fontWeight:'700',color:'#a2938a'}}>Mot de passe</label>
-                  <input value={obPassword} onChange={e => setObPassword(e.target.value)} type="password" placeholder="1234" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',margin:'6px 0 14px'}}/>
+                  <input value={obPassword} onChange={e => setObPassword(e.target.value)} type="password" placeholder="1234" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',margin:'6px 0 14px',minHeight:'48px'}}/>
                   
                   {obError && <div style={{color:'#bb4b30',fontSize:'13px',marginBottom:'12px'}}>{obError}</div>}
                   <button onClick={handleJoinRoom} className="btn-secondary" style={{width:'100%'}}>Rejoindre le parcours</button>
@@ -1282,8 +1318,8 @@
               
               {/* LIVE QUIZ POPUP MODAL (ON PARTICIPANT PHONES) */}
               {play && (
-                <div style={{position:'absolute',inset:0,background:'#f7f1eb',zIndex:250,overflowY:'auto',display:'flex',flexDirection:'column'}} className="animate-pop">
-                  <div style={{padding:'18px 18px 30px',minHeight:'100vh',display:'flex',flexDirection:'column'}}>
+                <div style={{position:'absolute',inset:0,background:'#f7f1eb',zIndex:250,overflowY:'auto',display:'flex',flexDirection:'column',WebkitOverflowScrolling:'touch'}} className="animate-pop">
+                  <div style={{padding:'18px 18px 30px',minHeight:'100vh',minHeight:'100dvh',display:'flex',flexDirection:'column'}}>
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'8px'}}>
                       <button onClick={() => setPlay(null)} style={{background:'none',border:'none',color:'#a89a90',fontSize:'14px',cursor:'pointer',padding:0}}>← fermer</button>
                       <span style={{fontSize:'11.5px',fontWeight:'700',color:'#c26a4a',background:'#f6e5db',padding:'4px 9px',borderRadius:'8px'}}>
@@ -1306,22 +1342,23 @@
                             onClick={() => toggleCheckboxOption(opt.id)}
                             style={{
                               background: isChecked ? '#fdf3ee' : '#fff',
-                              border: isChecked ? '2px solid #c26a4a' : '1px solid #eeddd3',
+                              border: isChecked ? '2px solid #a64d2e' : '1px solid #eeddd3',
                               borderRadius: '16px',
                               padding: '14px 16px',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '14px',
                               cursor: 'pointer',
-                              boxShadow: isChecked ? '0 6px 18px rgba(194, 106, 74, 0.12)' : '0 3px 10px rgba(0,0,0,0.03)',
-                              transition: 'all 0.2s'
+                              boxShadow: isChecked ? '0 6px 18px rgba(166, 77, 46, 0.12)' : '0 3px 10px rgba(0,0,0,0.03)',
+                              transition: 'all 0.2s',
+                              minHeight: '64px'
                             }}
                           >
                             <input
                               type="checkbox"
                               className="custom-checkbox-input"
                               checked={isChecked}
-                              onChange={() => {}} // handled by parent div onClick
+                              onChange={() => {}}
                             />
                             <div style={{fontSize:'34px',flexShrink:0}}>{opt.emoji}</div>
                             <div style={{flex:1}}>
@@ -1347,7 +1384,7 @@
 
               {/* TIER LIST MODAL */}
               {tierListModalOpen && (
-                <div style={{position:'fixed',inset:0,background:'rgba(30,25,22,0.75)',backdropFilter:'blur(5px)',zIndex:350,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} className="animate-pop">
+                <div style={{position:'fixed',inset:0,background:'rgba(30,25,22,0.75)',backdropFilter:'blur(5px)',WebkitBackdropFilter:'blur(5px)',zIndex:350,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} className="animate-pop">
                   <div style={{background:'#f7f1eb',borderRadius:'22px',width:'100%',maxWidth:'420px',maxHeight:'90vh',overflowY:'auto',padding:'20px',boxShadow:'0 20px 40px rgba(0,0,0,0.25)'}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
                       <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'28px'}}>🏆 Tier List Finale</div>
@@ -1355,12 +1392,12 @@
                     </div>
 
                     <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'10px'}}>
-                      Classement — <span style={{color:'#c26a4a'}}>{room.players.find(p => p.id === (tierPlayerId || me))?.name}</span>
+                      Classement — <span style={{color:'#a64d2e'}}>{room.players.find(p => p.id === (tierPlayerId || me))?.name}</span>
                     </div>
                     
                     <div style={{display:'flex',gap:'7px',marginBottom:'14px'}}>
                       {room.players.map(p => (
-                        <button key={p.id} onClick={() => { setTierPlayerId(p.id); setTierSelItemId(null); }} style={{flex:1,background: (tierPlayerId || me) === p.id ? '#c26a4a':'#f4ede6',color: (tierPlayerId || me) === p.id ? '#fff':'#8b7d74',border:'none',padding:'8px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',cursor:'pointer'}}>
+                        <button key={p.id} onClick={() => { setTierPlayerId(p.id); setTierSelItemId(null); }} style={{flex:1,background: (tierPlayerId || me) === p.id ? '#a64d2e':'#f4ede6',color: (tierPlayerId || me) === p.id ? '#fff':'#8b7d74',border:'none',padding:'8px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',cursor:'pointer'}}>
                           {p.name}
                         </button>
                       ))}
@@ -1433,7 +1470,7 @@
                       </div>
                     </div>
 
-                    <button onClick={copyShareLink} style={{width:'100%',background:'#f6e5db',color:'#c26a4a',border:'none',borderRadius:'10px',padding:'9px',fontSize:'12.5px',fontWeight:'700',cursor:'pointer',marginBottom:'14px'}}>
+                    <button onClick={copyShareLink} style={{width:'100%',background:'#f6e5db',color:'#a64d2e',border:'none',borderRadius:'10px',padding:'9px',fontSize:'12.5px',fontWeight:'700',cursor:'pointer',marginBottom:'14px'}}>
                       📋 Copier le lien d'invitation
                     </button>
 
@@ -1463,14 +1500,14 @@
 
                     {editingPseudo && (
                       <div style={{marginBottom:'12px',background:'#f2eae3',padding:'10px',borderRadius:'10px'}}>
-                        <label style={{fontSize:'11.5px',fontWeight:'700',color:'#c26a4a',display:'block',marginBottom:'4px'}}>Nouveau pseudo</label>
+                        <label style={{fontSize:'11.5px',fontWeight:'700',color:'#a64d2e',display:'block',marginBottom:'4px'}}>Nouveau pseudo</label>
                         <div style={{display:'flex',gap:'6px'}}>
                           <input
                             value={tempPseudo}
                             onChange={e => setTempPseudo(e.target.value)}
                             style={{flex:1,padding:'6px 8px',border:'1px solid #eeddd3',borderRadius:'7px',fontSize:'12.5px',outline:'none'}}
                           />
-                          <button onClick={() => renameMyPseudo(tempPseudo)} style={{background:'#c26a4a',color:'#fff',border:'none',borderRadius:'7px',padding:'6px 10px',fontSize:'12px',fontWeight:'700',cursor:'pointer'}}>OK</button>
+                          <button onClick={() => renameMyPseudo(tempPseudo)} style={{background:'#a64d2e',color:'#fff',border:'none',borderRadius:'7px',padding:'6px 10px',fontSize:'12px',fontWeight:'700',cursor:'pointer'}}>OK</button>
                         </div>
                       </div>
                     )}
@@ -1517,7 +1554,7 @@
                                 fontWeight:'700',
                                 border:'none',
                                 cursor:'pointer',
-                                background: newStepKind === k.id ? '#c26a4a' : '#f4ede6',
+                                background: newStepKind === k.id ? '#a64d2e' : '#f4ede6',
                                 color: newStepKind === k.id ? '#fff' : '#7a6c64'
                               }}
                             >
@@ -1566,8 +1603,8 @@
                                     onClick={() => setNewQPrefix(st)}
                                     style={{
                                       background: newQPrefix === st ? '#f7ddd3' : '#f9f5f0',
-                                      border: newQPrefix === st ? '1px solid #c26a4a' : '1px solid #eee0d5',
-                                      color: newQPrefix === st ? '#c26a4a' : '#584c46',
+                                      border: newQPrefix === st ? '1px solid #a64d2e' : '1px solid #eee0d5',
+                                      color: newQPrefix === st ? '#a64d2e' : '#584c46',
                                       fontSize:'11.5px',
                                       fontWeight:'600',
                                       padding:'4px 9px',
@@ -1612,7 +1649,7 @@
                             {newQOptions.map((opt, idx) => (
                               <div key={opt.id} style={{background:'#fcfbf9',border:'1px solid #eee0d5',borderRadius:'11px',padding:'10px'}}>
                                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'6px'}}>
-                                  <span style={{fontSize:'12px',fontWeight:'700',color:'#c26a4a'}}>Option {idx + 1}</span>
+                                  <span style={{fontSize:'12px',fontWeight:'700',color:'#a64d2e'}}>Option {idx + 1}</span>
                                   {newQOptions.length > 2 && (
                                     <button type="button" onClick={() => setNewQOptions(newQOptions.filter(o => o.id !== opt.id))} style={{background:'none',border:'none',color:'#bb4b30',fontSize:'12px',cursor:'pointer'}}>Supprimer</button>
                                   )}
@@ -1647,7 +1684,7 @@
                         {newStepKind === 'forced' && (
                           <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
                             <div style={{background:'#fcfbf9',border:'1px solid #eee0d5',borderRadius:'11px',padding:'10px'}}>
-                              <div style={{fontSize:'12px',fontWeight:'700',color:'#c26a4a',marginBottom:'6px'}}>1er Élément du Duel</div>
+                              <div style={{fontSize:'12px',fontWeight:'700',color:'#a64d2e',marginBottom:'6px'}}>1er Élément du Duel</div>
                               <div style={{display:'flex',gap:'6px',marginBottom:'6px'}}>
                                 <button type="button" onClick={() => openEmojiPicker(setNewDuelA_emoji)} style={{fontSize:'18px',width:'44px',height:'38px',border:'1px solid #eeddd3',borderRadius:'8px',background:'#fff',cursor:'pointer'}}>{newDuelA_emoji}</button>
                                 <input value={newDuelA_name} onChange={e => setNewDuelA_name(capitalize(e.target.value))} placeholder="ex: Otacos Rivoli" style={{flex:1,padding:'8px 10px',border:'1px solid #eeddd3',borderRadius:'8px',fontSize:'13px'}}/>
@@ -1757,7 +1794,7 @@
                                 {isMeHost && (
                                   <div style={{display:'flex',gap:'7px',flexWrap:'wrap',marginTop:'11px'}}>
                                     {s.kind !== 'place' && (
-                                      <button onClick={() => launchStep(s)} style={{background:'#f7ddd3',border:'none',color:'#c26a4a',fontSize:'12.5px',padding:'7px 13px',borderRadius:'10px',cursor:'pointer',fontWeight:'700'}}>
+                                      <button onClick={() => launchStep(s)} style={{background:'#f7ddd3',border:'none',color:'#a64d2e',fontSize:'12.5px',padding:'7px 13px',borderRadius:'10px',cursor:'pointer',fontWeight:'700'}}>
                                         🚀 Lancer pour la room
                                       </button>
                                     )}
@@ -1797,7 +1834,7 @@
                     {/* CATEGORY TABS */}
                     <div style={{display:'flex',gap:'7px',overflowX:'auto',paddingBottom:'8px',marginBottom:'14px'}}>
                       {CATS.map(c => (
-                        <button key={c.id} onClick={() => setPrepCat(c.id)} style={{whiteSpace:'nowrap',background: prepCat===c.id?'#c26a4a':'#f4ede6',color: prepCat===c.id?'#fff':'#8b7d74',border:'none',padding:'8px 14px',borderRadius:'11px',fontSize:'13px',fontWeight:'600',cursor:'pointer'}}>
+                        <button key={c.id} onClick={() => setPrepCat(c.id)} style={{whiteSpace:'nowrap',background: prepCat===c.id?'#a64d2e':'#f4ede6',color: prepCat===c.id?'#fff':'#8b7d74',border:'none',padding:'8px 14px',borderRadius:'11px',fontSize:'13px',fontWeight:'600',cursor:'pointer'}}>
                           {c.name}
                         </button>
                       ))}
@@ -1883,7 +1920,7 @@
                         const newO = blankOuting('Nouveau parcours', me);
                         writeRoom({ ...room, outings: [...room.outings, newO], activeOutingId: newO.id });
                         flash("Nouveau parcours créé !");
-                      }} style={{background:'#c26a4a',color:'#fff',border:'none',borderRadius:'11px',padding:'9px 14px',fontSize:'13px',fontWeight:'700',cursor:'pointer'}}>+ Nouveau parcours</button>
+                      }} style={{background:'#a64d2e',color:'#fff',border:'none',borderRadius:'11px',padding:'9px 14px',fontSize:'13px',fontWeight:'700',cursor:'pointer'}}>+ Nouveau parcours</button>
                     </div>
                     <p style={{color:'#8b7d74',fontSize:'13px',margin:'2px 0 16px'}}>Toutes les balades créées dans cette room.</p>
                     
@@ -1915,13 +1952,13 @@
               </div>
 
               {/* BOTTOM NAVIGATION BAR */}
-              <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:'440px',background:'rgba(250,246,241,.96)',backdropFilter:'blur(10px)',borderTop:'1px solid #ece0d6',display:'flex',padding:'8px 6px 10px',zIndex:150}}>
+              <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:'480px',background:'rgba(250,246,241,.96)',backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',borderTop:'1px solid #ece0d6',display:'flex',padding:'8px 6px max(10px, env(safe-area-inset-bottom))',zIndex:150}}>
                 {[
                   { id: 'parcours', label: 'Parcours', svg: <path d="M8.2 17.6h6a3.1 3.1 0 0 0 0-6.2h-4.4a3.1 3.1 0 0 1 0-6.2H16"/>, wrap: <><circle cx="6" cy="18.5" r="2.2"/><circle cx="18" cy="5.5" r="2.2"/></> },
                   { id: 'catalog', label: 'Catégories', svg: <path d="M4 6h16M4 12h16M4 18h16"/> },
                   { id: 'history', label: 'Vos Parcours', svg: <path d="M12 7.5v5l3 2"/>, wrap: <circle cx="12" cy="12" r="8.5"/> }
                 ].map(tabItem => (
-                  <button key={tabItem.id} onClick={() => setTab(tabItem.id)} style={{flex:1,background:'none',border:'none',display:'flex',flexDirection:'column',alignItems:'center',gap:'3px',cursor:'pointer',color: tab===tabItem.id?'#c26a4a':'#bcaea4'}}>
+                  <button key={tabItem.id} onClick={() => setTab(tabItem.id)} style={{flex:1,background:'none',border:'none',display:'flex',flexDirection:'column',alignItems:'center',gap:'3px',cursor:'pointer',color: tab===tabItem.id?'#a64d2e':'#bcaea4'}}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       {tabItem.wrap}
                       {tabItem.svg}
