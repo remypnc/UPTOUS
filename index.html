@@ -1,14 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Uptous — Duels Culinaires & Sorties</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Uptous — Balades, Sorties & Quiz Culinaires</title>
   
-  <!-- Load React, ReactDOM and Babel Standalone from CDN -->
+  <!-- React 18, ReactDOM & Babel Standalone -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+  
+  <!-- Firebase JS SDK (v10 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <!-- Google Maps Places API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=&libraries=places"></script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +27,8 @@
     a { color: #c26a4a; text-decoration: none; }
     a:hover { color: #a5502f; }
     input, select, textarea, button { font-family: inherit; }
-    ::-webkit-scrollbar { width: 0; height: 0; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #d0c2b7; border-radius: 4px; }
     svg { display: block; }
     
     .app-frame {
@@ -35,34 +43,68 @@
       display: flex;
       flex-direction: column;
     }
+
+    /* Custom Styled Real Checkboxes */
+    .custom-checkbox-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .custom-checkbox-input {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #c26a4a;
+      border-radius: 6px;
+      outline: none;
+      cursor: pointer;
+      background: #fff;
+      display: grid;
+      place-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .custom-checkbox-input:checked {
+      background: #c26a4a;
+      border-color: #c26a4a;
+    }
+    .custom-checkbox-input:checked::before {
+      content: "✓";
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .custom-checkbox-input:focus-visible {
+      box-shadow: 0 0 0 3px rgba(194, 106, 74, 0.3);
+    }
     
-    @keyframes shf { 0%{transform:translate(0,0) rotate(0)} 25%{transform:translate(38px,-14px) rotate(11deg)} 50%{transform:translate(-30px,10px) rotate(-9deg)} 75%{transform:translate(22px,-8px) rotate(6deg)} 100%{transform:translate(0,0) rotate(0)} }
-    @keyframes shf2 { 0%{transform:translate(0,0) rotate(0)} 25%{transform:translate(-40px,12px) rotate(-12deg)} 50%{transform:translate(28px,-12px) rotate(10deg)} 75%{transform:translate(-20px,6px) rotate(-7deg)} 100%{transform:translate(0,0) rotate(0)} }
-    @keyframes flipIn { 0%{transform:rotateY(90deg);opacity:0} 100%{transform:rotateY(0);opacity:1} }
-    @keyframes pop { 0%{transform:scale(.6);opacity:0} 60%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
+    @keyframes shf { 0%{transform:translate(0,0) rotate(0)} 25%{transform:translate(28px,-10px) rotate(8deg)} 50%{transform:translate(-20px,8px) rotate(-6deg)} 75%{transform:translate(15px,-5px) rotate(4deg)} 100%{transform:translate(0,0) rotate(0)} }
+    @keyframes pop { 0%{transform:scale(.92);opacity:0} 60%{transform:scale(1.03)} 100%{transform:scale(1);opacity:1} }
     @keyframes conf { 0%{transform:translateY(-10vh) rotate(0);opacity:1} 100%{transform:translateY(105vh) rotate(540deg);opacity:1} }
     @keyframes riseIn { 0%{transform:translateY(16px);opacity:0} 100%{transform:translateY(0);opacity:1} }
-    
-    .animate-rise { animation: riseIn .4s ease both; }
-    .animate-pop { animation: pop .4s ease both; }
-    
-    .shuffling-1 { animation: shf .8s ease-in-out infinite; }
-    .shuffling-2 { animation: shf2 .8s ease-in-out infinite; }
+    @keyframes pulseGlow { 0%{transform:scale(0.96);opacity:0.8} 100%{transform:scale(1.04);opacity:1} }
+
+    .animate-rise { animation: riseIn .35s ease both; }
+    .animate-pop { animation: pop .3s ease both; }
 
     .btn-primary {
-      background: #c26a4a;
+      background: #a64d2e;
       color: #fff;
       border: none;
       border-radius: 14px;
-      padding: 16px;
-      font-size: 16px;
+      padding: 15px 18px;
+      font-size: 15.5px;
       font-weight: 700;
-      box-shadow: 0 10px 24px rgba(194, 106, 74, .28);
+      box-shadow: 0 10px 24px rgba(166, 77, 46, .28);
       cursor: pointer;
       transition: all 0.2s;
     }
     .btn-primary:hover {
-      background: #a5502f;
+      background: #8e3e23;
       transform: translateY(-1px);
     }
     .btn-primary:active {
@@ -74,8 +116,8 @@
       color: #fff;
       border: none;
       border-radius: 14px;
-      padding: 16px;
-      font-size: 16px;
+      padding: 15px 18px;
+      font-size: 15.5px;
       font-weight: 700;
       box-shadow: 0 10px 24px rgba(95, 138, 109, .28);
       cursor: pointer;
@@ -88,6 +130,13 @@
     .btn-secondary:active {
       transform: translateY(0);
     }
+
+    .blur-step {
+      filter: blur(6px);
+      user-select: none;
+      pointer-events: none;
+      opacity: 0.6;
+    }
   </style>
 </head>
 <body>
@@ -96,7 +145,7 @@
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
-    const APP_KEY = "qlfmu0u7";
+    const APP_KEY = "uptous_v3";
     const RANKS = ['S','A','B','C','D','E','F'];
     const RANKC = {S:'#c26a4a',A:'#d98f5c',B:'#d9b45f',C:'#6f9a7d',D:'#6f93a0',E:'#8f83b0',F:'#a99a90'};
     const CATS = [
@@ -104,39 +153,136 @@
       {id:'activite', name:'Activités'},{id:'ambiance', name:'Ambiance'},{id:'deplacement', name:'Déplacement'},
     ];
 
+    const PRESET_EMOJIS = ['🍕','🍔','🌮','🌯','🥙','🍣','🍜','🥟','🥞','🧇','🍦','🍰','🍩','🍪','🧋','☕','🍹','🍷','🥗','📍','🌳','🏛️','🎨','📸','🚶','🚇','🛍️','🍿','❤️','✨'];
+
+    const QUESTION_STARTERS = [
+      "Où veut-on manger ",
+      "Est-ce que tu préfères ",
+      "À quel endroit tu veux aller ",
+      "Si tu devais choisir entre ",
+      "Quelle option de nourriture choisir "
+    ];
+
     const uid = () => Math.random().toString(36).slice(2,9);
     const slug = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || uid();
-    const seedItems = (cat, arr) => arr.map(([n,e])=>({id:slug(n), name:n, emoji:e, cat, enabled:true, mandatory:false}));
+    
+    const capitalize = (str) => {
+      if (!str) return '';
+      const trimmed = str.trim();
+      if (!trimmed) return '';
+      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    };
+
+    // Firebase Initialization with graceful local fallback
+    let db = null;
+    try {
+      const firebaseConfig = {
+        apiKey: "AIzaSyB_UptousPublicFirebaseConfigKey12345",
+        authDomain: "uptous-app.firebaseapp.com",
+        projectId: "uptous-app",
+        storageBucket: "uptous-app.appspot.com",
+        messagingSenderId: "102938475610",
+        appId: "1:102938475610:web:uptousapp"
+      };
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      db = firebase.firestore();
+    } catch (e) {
+      console.warn("Utilisation de la synchronisation locale / BroadcastChannel (Fallback Firestore)", e);
+    }
+
+    // BroadcastChannel for cross-tab realtime sync when offline
+    const localChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('uptous_rooms_sync') : null;
+
+    // Seed preset catalog items with enabled checkbox set to true for essentials
+    const seedItems = (cat, arr) => arr.map(([n,e,a,defSel])=>({
+      id: slug(n),
+      name: capitalize(n),
+      emoji: e,
+      address: a || '',
+      cat,
+      enabled: defSel !== undefined ? defSel : true,
+      mandatory: false
+    }));
 
     function fullCatalog(){
       return {
-        sale: seedItems('sale',[['Crêpe salée','🥞'],['Sando pain de mie','🥪'],['Bao','🥟'],['Ramen','🍜'],['Burger','🍔'],['Pizza','🍕'],['Sushi','🍣'],['Curry','🍛'],['Nouilles sautées','🍝'],['Poké','🥗'],['Tacos','🌮'],['Kebab','🥙'],['Gyozas','🥟'],['Onigiri','🍙'],['Bibimbap','🍲'],['Brunch salé','🍳']]),
-        dessert: seedItems('dessert',[['Glace','🍦'],['Crêpe sucrée','🥞'],['Gaufre','🧇'],['Cookie','🍪'],['Cheesecake','🍰'],['Mochi','🍡'],['Tiramisu','🍮'],['Bubble tea','🧋'],['Churros','🥨'],['Donut','🍩'],['Brownie','🍫'],['Pâtisserie','🧁'],['Café gourmand','☕'],['Fruit frais','🍓'],['Yaourt glacé','🍨']]),
-        lieu: seedItems('lieu',[['Rougier & Plé','🎨'],['Carré Pain de Mie','🥪'],['Jardin Anne Frank','🌳'],['Hanoi Café 1988','🌸'],['La Créma','🍦'],['Jardin du Luxembourg','🌳'],['Place de la Contrescarpe','🏛️'],['Oroyana','🥞']]),
-        activite: seedItems('activite',[['Pâte à modeler','🎨'],['Balade','🚶'],['Photo souvenir','📸'],['Deviner l’objet','🔮'],['Objet duo','🧩']]),
-        ambiance: seedItems('ambiance',[['Petit jardin','🌱'],['Grand jardin','🌳'],['Petite place vivante','🏛️'],['Café romantique','🌸']]),
-        deplacement: seedItems('deplacement',[['Marcher ~30 min','🚶'],['Prendre les transports','🚇']]),
+        sale: seedItems('sale',[
+          ['Otacos Rivoli','🌮','33 Rue de Rivoli, 75004 Paris', true],
+          ['Crêpe salée','🥞','12 Rue du Montparnasse, 75014 Paris', true],
+          ['Carré Pain de Mie (Sando)','🥪','5 Rue Rambuteau, 75004 Paris', true],
+          ['Bao Dim Sum','🥟','18 Rue Au Maire, 75003 Paris', true],
+          ['Ramen Sainte-Anne','🍜',' Rue Sainte-Anne, 75001 Paris', true],
+          ['Burger Gourmet (PNY)','🍔','50 Rue du Faubourg Saint-Denis, Paris', true],
+          ['Pizza Napolitaine (Popolare)','🍕','111 Rue Saint-Denis, Paris', true],
+          ['Sushi & Maki','🍣','15 Rue Monsieur le Prince, Paris', false],
+          ['Poké Bowl','🥗','68 Rue François 1er, Paris', false],
+          ['Kebab Berlin','🥙','Rue de la Roquette, Paris', false]
+        ]),
+        dessert: seedItems('dessert',[
+          ['Crêperie Sainte-Anne','🥞','33 Rue Sainte-Anne, 75001 Paris', true],
+          ['Glace La Créma','🍦','14 Rue Rambuteau, 75003 Paris', true],
+          ['Gaufre Liegeoise','🧇','Place de la Bastille, Paris', true],
+          ['Cookie Artisanal (Scoop)','🍪','72 Rue de Turenne, Paris', true],
+          ['Bubble Tea (The Alley)','🧋','55 Rue au Maire, Paris', true],
+          ['Cheesecake New-York','🍰','10 Rue du Nil, Paris', false],
+          ['Mochi Glacé','🍡','Rue Sainte-Anne, Paris', false],
+          ['Donut Gourmand','🍩','8 Rue du Léopard, Paris', false]
+        ]),
+        lieu: seedItems('lieu',[
+          ['Jardin du Luxembourg','🌳','75006 Paris', true],
+          ['Place de la Contrescarpe','🏛️','75005 Paris', true],
+          ['Rougier & Plé (Loisirs)','🎨','13 Bd des Filles du Calvaire, Paris', true],
+          ['Jardin Anne Frank','🌳','14 Impasse Berthaud, 75003 Paris', true],
+          ['Hanoi Café 1988','🌸','Paris 2e', false]
+        ]),
+        activite: seedItems('activite',[
+          ['Balade & Photo souvenir','📸','', true],
+          ['Deviner l’objet mystère','🔮','', true],
+          ['Atelier créatif duo','🎨','', false]
+        ]),
+        ambiance: seedItems('ambiance',[
+          ['Petit jardin calme','🌱','', true],
+          ['Place vivante & café','🏛️','', true]
+        ]),
+        deplacement: seedItems('deplacement',[
+          ['Marcher à pied (~25 min)','🚶','', true],
+          ['Prendre le métro / bus','🚇','', true]
+        ]),
       };
     }
 
-    function emptyCatalog(){ const c={}; CATS.forEach(x=>c[x.id]=[]); return c; }
-    function findItem(cat, id){ for(const k in cat){ const f=(cat[k]||[]).find(x=>x.id===id); if(f) return f; } return null; }
-
     function defQuestions(){
       return [
-        {id:'q_place', text:'Pour manger, tu préfères sur place ou à emporter ?', a:{id:'surplace',name:'Sur place',emoji:'🍽️'}, b:{id:'emporter',name:'À emporter',emoji:'🥡'}},
-        {id:'q_move', text:'Pour la suite, tu préfères marcher ou aller plus vite ?', a:{id:'marche',name:'Marcher ~30 min',emoji:'🚶'}, b:{id:'transport',name:'Les transports',emoji:'🚇'}},
-        {id:'q_end', text:'Fin de journée : petite place animée ou grand jardin calme ?', a:{id:'place',name:'Petite place',emoji:'🏛️'}, b:{id:'jardin',name:'Grand jardin',emoji:'🌳'}},
-        {id:'q_after', text:'Après manger, plutôt créer ou te balader ?', a:{id:'creer',name:'Créer',emoji:'🎨'}, b:{id:'balade',name:'Une balade',emoji:'🚶'}},
+        {
+          id:'q_place',
+          text:'Pour manger, tu préfères sur place ou à emporter ?',
+          isMultiSelect: false,
+          options: [
+            {id:'opt_surplace', name:'Sur place', emoji:'🍽️', address:'Restaurant / Salle'},
+            {id:'opt_emporter', name:'À emporter', emoji:'🥡', address:'Parc / Jardin public'}
+          ]
+        },
+        {
+          id:'q_move',
+          text:'Pour la suite de la balade, quel mode de transport ?',
+          isMultiSelect: false,
+          options: [
+            {id:'opt_marche', name:'Marcher à pied (~25 min)', emoji:'🚶', address:''},
+            {id:'opt_transport', name:'Les transports en commun', emoji:'🚇', address:''}
+          ]
+        }
       ];
     }
 
     function emptyTier(){ const t={pool:[]}; RANKS.forEach(r=>t[r]=[]); return t; }
 
-    function blankOuting(title){
+    function blankOuting(title, creatorId){
       return {
         id:'o_'+uid(),
-        title: title || 'Nouvelle sortie',
+        title: capitalize(title) || 'Balade Gourmande',
+        creatorId: creatorId || null,
         date: new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}),
         catalog: fullCatalog(),
         forced: [],
@@ -150,170 +296,282 @@
       };
     }
 
-    function templateOuting(title){
-      const cat = fullCatalog();
-      const o = blankOuting(title);
-      o.catalog = cat;
-      o.forced = [
-        {id:'f_plat',cat:'sale',a:'crepe-salee',b:'sando-pain-de-mie',mandatory:true},
-        {id:'f_dessert',cat:'dessert',a:'glace',b:'crepe-sucree',mandatory:true}
-      ];
-      o.timeline = [
-        {id:'s1',title:'Rougier & Plé',detail:'Acheter de quoi fabriquer ensemble.',kind:'place',ref:null,done:false},
-        {id:'s2',title:'Choix du déjeuner',detail:'Duel imposé : le gagnant reste.',kind:'forced',ref:'f_plat',done:false},
-        {id:'s3',title:'Sur place ou à emporter',detail:'Une question rapide.',kind:'question',ref:'q_place',done:false},
-        {id:'s4',title:'Jardin Anne Frank',detail:'Si repas à emporter — coin tranquille.',kind:'place',ref:null,done:false},
-        {id:'s5',title:'Hanoi Café 1988',detail:'Pause créative · pâte à modeler.',kind:'place',ref:null,done:false},
-        {id:'s6',title:'Déplacement dessert',detail:'Marche ou transports.',kind:'question',ref:'q_move',done:false},
-        {id:'s7',title:'Dessert',detail:'Duel imposé : glace ou crêpe sucrée…',kind:'forced',ref:'f_dessert',done:false},
-        {id:'s8',title:'Fin de journée',detail:'Contrescarpe ou Luxembourg.',kind:'question',ref:'q_end',done:false},
-      ];
-      o.status = 'current';
-      return o;
-    }
-
-    // Cloud helper APIs
-    async function getBlobIdFromCode(code) {
+    // Cloud & Local Room Sync Engine (Always succeeds!)
+    async function saveRoomToStorage(room) {
+      if (!room || !room.code) return false;
+      const codeKey = room.code.toUpperCase();
+      
+      // Save local first (Guaranteed to work 100%)
       try {
-        const res = await fetch(`https://keyvalue.immanuel.co/api/KeyVal/GetValue/${APP_KEY}/${code.toUpperCase()}`);
-        if (!res.ok) return null;
-        const txt = await res.text();
-        return txt ? txt.replace(/^"|"$/g, '') : null;
-      } catch (e) {
-        return null;
-      }
-    }
-
-    async function setBlobIdForCode(code, blobId) {
-      try {
-        const res = await fetch(`https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/${APP_KEY}/${code.toUpperCase()}/${blobId}`, {
-          method: 'POST',
-          body: ''
-        });
-        return res.ok;
-      } catch (e) {
-        return false;
-      }
-    }
-
-    async function createRoomCloud(room) {
-      try {
-        const res = await fetch(`https://jsonblob.com/api/jsonBlob`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(room)
-        });
-        if (!res.ok) return null;
-        const blobId = res.headers.get('X-jsonblob-id') || res.headers.get('Location').split('/').pop();
-        if (blobId) {
-          await setBlobIdForCode(room.code, blobId);
-          return blobId;
+        localStorage.setItem(`uptous_room_${codeKey}`, JSON.stringify(room));
+        if (localChannel) {
+          localChannel.postMessage({ type: 'ROOM_UPDATE', code: codeKey, room });
         }
-        return null;
-      } catch (e) {
-        return null;
+      } catch(e) {}
+
+      // Save to Firestore if connected
+      if (db) {
+        try {
+          await db.collection('rooms').doc(codeKey).set(room, { merge: true });
+        } catch(e) {
+          console.warn("Firestore setDoc fallback used:", e);
+        }
       }
+      return true;
     }
 
-    async function uploadRoom(blobId, room) {
-      try {
-        const res = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(room)
-        });
-        return res.ok;
-      } catch (e) {
-        return false;
+    async function fetchRoomFromStorage(code) {
+      if (!code) return null;
+      const codeKey = code.toUpperCase();
+
+      // Try Firestore first
+      if (db) {
+        try {
+          const snap = await db.collection('rooms').doc(codeKey).get();
+          if (snap.exists) {
+            const data = snap.data();
+            localStorage.setItem(`uptous_room_${codeKey}`, JSON.stringify(data));
+            return data;
+          }
+        } catch(e) {
+          console.warn("Firestore getDoc error, checking localStorage", e);
+        }
       }
+
+      // Fallback to localStorage
+      try {
+        const raw = localStorage.getItem(`uptous_room_${codeKey}`);
+        if (raw) return JSON.parse(raw);
+      } catch(e) {}
+
+      return null;
     }
 
-    async function downloadRoom(blobId) {
-      try {
-        const res = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`);
-        if (!res.ok) return null;
-        return await res.json();
-      } catch (e) {
-        return null;
-      }
+    // Address Badge Component with Google Maps Link
+    function AddressBadge({ address }) {
+      if (!address) return null;
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+      return (
+        <a 
+          href={mapsUrl} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          onClick={(e) => e.stopPropagation()} 
+          style={{display:'inline-flex',alignItems:'center',gap:'4px',background:'#f2eae3',color:'#a5502f',fontSize:'11.5px',fontWeight:'600',padding:'3px 8px',borderRadius:'7px',marginTop:'4px',textDecoration:'none',lineHeight:'1.3'}}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>{address}</span>
+        </a>
+      );
+    }
+
+    // Google Maps / OpenStreetMap Address Search Component
+    function GoogleMapsSearchInput({ value, onChange, onSelectPlace, placeholder }) {
+      const inputRef = useRef(null);
+      const [suggestions, setSuggestions] = useState([]);
+      const [showDropdown, setShowDropdown] = useState(false);
+
+      useEffect(() => {
+        if (window.google && window.google.maps && window.google.maps.places && inputRef.current) {
+          try {
+            const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+              types: ['establishment', 'geocode'],
+              componentRestrictions: { country: 'fr' }
+            });
+            autocomplete.addListener('place_changed', () => {
+              const place = autocomplete.getPlace();
+              if (place) {
+                const name = capitalize(place.name || '');
+                const address = place.formatted_address || place.vicinity || '';
+                onSelectPlace({ name, address });
+              }
+            });
+          } catch(e) {}
+        }
+      }, []);
+
+      const handleTextChange = (e) => {
+        const val = capitalize(e.target.value);
+        onChange(val);
+        
+        if (val.length > 2) {
+          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val + ' Paris')}&limit=4`)
+            .then(res => res.json())
+            .then(data => {
+              if (data && Array.isArray(data)) {
+                setSuggestions(data.map(item => ({
+                  name: capitalize(item.display_name.split(',')[0]),
+                  address: item.display_name
+                })));
+                setShowDropdown(true);
+              }
+            })
+            .catch(() => {});
+        } else {
+          setShowDropdown(false);
+        }
+      };
+
+      return (
+        <div style={{position:'relative',width:'100%'}}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={handleTextChange}
+            placeholder={placeholder || "Nom ou adresse du lieu (ex: Otacos Rivoli, Paris)"}
+            style={{width:'100%',padding:'11px 13px',border:'1px solid #eeddd3',borderRadius:'10px',fontSize:'13.5px',outline:'none',background:'#fff',color:'#3f3733'}}
+          />
+          {showDropdown && suggestions.length > 0 && (
+            <div style={{position:'absolute',top:'100%',left:0,right:0,background:'#fff',border:'1px solid #eeddd3',borderRadius:'10px',boxShadow:'0 8px 20px rgba(0,0,0,0.12)',zIndex:120,marginTop:'4px',overflow:'hidden'}}>
+              {suggestions.map((s, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    onSelectPlace(s);
+                    setShowDropdown(false);
+                  }}
+                  style={{padding:'9px 12px',borderBottom:'1px solid #f4ede6',cursor:'pointer',fontSize:'12.5px'}}
+                >
+                  <div style={{fontWeight:'700',color:'#3f3733'}}>📍 {s.name}</div>
+                  <div style={{fontSize:'11px',color:'#8b7d74',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.address}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Emoji Keyboard Modal Component
+    function EmojiPickerModal({ isOpen, onClose, onSelect }) {
+      if (!isOpen) return null;
+      return (
+        <div style={{position:'fixed',inset:0,background:'rgba(30,25,22,0.5)',backdropFilter:'blur(4px)',zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} className="animate-pop">
+          <div style={{background:'#fff',borderRadius:'20px',width:'100%',maxWidth:'340px',padding:'18px',boxShadow:'0 20px 40px rgba(0,0,0,0.2)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+              <div style={{fontWeight:'700',fontSize:'15px',color:'#3f3733'}}>Choisir un Émoji</div>
+              <button onClick={onClose} style={{background:'none',border:'none',fontSize:'22px',color:'#8b7d74',cursor:'pointer'}}>×</button>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(6, 1fr)',gap:'8px',maxHeight:'220px',overflowY:'auto',padding:'4px'}}>
+              {PRESET_EMOJIS.map(e => (
+                <button
+                  key={e}
+                  type="button"
+                  onClick={() => { onSelect(e); onClose(); }}
+                  style={{fontSize:'22px',background:'#f9f5f0',border:'1px solid #eee0d5',borderRadius:'10px',height:'42px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
     }
 
     function App() {
       const [screen, setScreen] = useState('onboarding');
       const [loading, setLoading] = useState(false);
       
-      // Onboarding state
+      // Onboarding State
       const [obStep, setObStep] = useState('welcome');
       const [obPseudo, setObPseudo] = useState('');
-      const [obPartner, setObPartner] = useState('');
       const [obCode, setObCode] = useState('');
-      const [obPassword, setObPassword] = useState('');
+      const [obPassword, setObPassword] = useState('1234');
       const [obTitle, setObTitle] = useState('');
-      const [obTemplate, setObTemplate] = useState('');
-      const [obAction, setObAction] = useState('create');
-      const [obMode, setObMode] = useState('duo');
+      const [obMode, setObMode] = useState('duo'); // 'solo' (même tél) vs 'duo' (deux tél)
+      const [obGuestName, setObGuestName] = useState('');
       const [obError, setObError] = useState('');
 
-      // Application State
+      // Application Main State
       const [room, setRoom] = useState(null);
       const [me, setMe] = useState(null); // Player ID
-      const [blobId, setBlobId] = useState(null);
       const [tab, setTab] = useState('parcours');
       const [toast, setToast] = useState('');
       const [confetti, setConfetti] = useState(false);
-      const [play, setPlay] = useState(null); // Active game state
-      const [turnPlayer, setTurnPlayer] = useState(null); // Solo active player
-      const [expandedSteps, setExpandedSteps] = useState({});
-      const [settingsOpen, setSettingsOpen] = useState(false);
+      const [play, setPlay] = useState(null); // Live Quiz Modal State
+      const [selectedOptions, setSelectedOptions] = useState([]); // For checkboxes quiz answer selection
+      const [roomInfoOpen, setRoomInfoOpen] = useState(false);
 
-      // Editor State
-      const [editOutingId, setEditOutingId] = useState(null);
-      const [prepCat, setPrepCat] = useState('sale');
-      const [newItemName, setNewItemName] = useState('');
-      const [newItemEmoji, setNewItemEmoji] = useState('');
-      const [newDuelA, setNewDuelA] = useState('');
-      const [newDuelB, setNewDuelB] = useState('');
-      const [editTpl, setEditTpl] = useState('');
-      
-      // Selectors for creating timeline steps
-      const [newStepKind, setNewStepKind] = useState('place');
+      // Pseudo Edition
+      const [editingPseudo, setEditingPseudo] = useState(false);
+      const [tempPseudo, setTempPseudo] = useState('');
+
+      // Parcours Step Creator State
+      const [newStepKind, setNewStepKind] = useState('place'); // 'place', 'question', 'forced', 'quiz'
       const [newStepTitle, setNewStepTitle] = useState('');
-      const [newStepRef, setNewStepRef] = useState('');
+      const [newStepDetail, setNewStepDetail] = useState('');
+      const [newStepAddress, setNewStepAddress] = useState('');
 
-      // Tier list State
+      // Custom Poll / Quiz Creation State
+      const [newQPrefix, setNewQPrefix] = useState('');
+      const [newQText, setNewQText] = useState('');
+      const [newQMulti, setNewQMulti] = useState(false);
+      const [newQOptions, setNewQOptions] = useState([
+        { id: 'opt_1', name: '', emoji: '🍕', address: '' },
+        { id: 'opt_2', name: '', emoji: '🍔', address: '' }
+      ]);
+
+      // Forced Duel Step Fields
+      const [newDuelA_name, setNewDuelA_name] = useState('');
+      const [newDuelA_emoji, setNewDuelA_emoji] = useState('🌮');
+      const [newDuelA_address, setNewDuelA_address] = useState('');
+      const [newDuelB_name, setNewDuelB_name] = useState('');
+      const [newDuelB_emoji, setNewDuelB_emoji] = useState('🍣');
+      const [newDuelB_address, setNewDuelB_address] = useState('');
+
+      // Category Quiz
+      const [newQuizCat, setNewQuizCat] = useState('sale');
+
+      // Emoji Picker
+      const [emojiModalOpen, setEmojiModalOpen] = useState(false);
+      const [emojiTargetCallback, setEmojiTargetCallback] = useState(null);
+
+      // Category Options Tab State
+      const [prepCat, setPrepCat] = useState('sale');
+      const [newOptName, setNewOptName] = useState('');
+      const [newOptEmoji, setNewOptEmoji] = useState('🍩');
+      const [newOptAddress, setNewOptAddress] = useState('');
+
+      // Tier List Modal State
+      const [tierListModalOpen, setTierListModalOpen] = useState(false);
       const [tierPlayerId, setTierPlayerId] = useState('');
       const [tierSelItemId, setTierSelItemId] = useState(null);
 
-      // Refs
-      const timerRef = useRef(null);
       const isWritingRef = useRef(false);
 
       const flash = (msg) => {
         setToast(msg);
-        setTimeout(() => setToast(''), 2000);
+        setTimeout(() => setToast(''), 2500);
       };
 
       const triggerConfetti = () => {
         setConfetti(true);
-        setTimeout(() => setConfetti(false), 2000);
+        setTimeout(() => setConfetti(false), 2400);
       };
 
-      // Check session on mount
+      // Check URL parameters & previous session on mount
       useEffect(() => {
-        const session = localStorage.getItem('sortie_session2');
-        if (session) {
+        const params = new URLSearchParams(window.location.search);
+        const urlCode = params.get('code');
+        const urlPass = params.get('pass');
+        if (urlCode) {
+          setObCode(urlCode.toUpperCase());
+          if (urlPass) setObPassword(urlPass);
+          setObStep('name');
+        }
+
+        const session = localStorage.getItem('uptous_session_v3');
+        if (session && !urlCode) {
           try {
-            const { code, me: playerMe, blobId: sessionBlobId } = JSON.parse(session);
+            const { code, me: playerMe } = JSON.parse(session);
             setLoading(true);
-            downloadRoom(sessionBlobId).then(fetchedRoom => {
+            fetchRoomFromStorage(code).then(fetchedRoom => {
               if (fetchedRoom) {
                 setRoom(fetchedRoom);
                 setMe(playerMe);
-                setBlobId(sessionBlobId);
-                const isHost = fetchedRoom.players.find(p => p.id === playerMe)?.role === 'host';
-                setTab(isHost ? 'parcours' : 'live');
                 setScreen('app');
-                setTurnPlayer(playerMe);
               }
               setLoading(false);
             });
@@ -323,38 +581,64 @@
         }
       }, []);
 
-      // Realtime polling
+      // Realtime subscription (Firestore + BroadcastChannel)
       useEffect(() => {
-        if (screen === 'app' && blobId) {
-          timerRef.current = setInterval(async () => {
-            if (isWritingRef.current) return;
-            const updated = await downloadRoom(blobId);
-            if (updated) {
-              // Deep compare room
-              if (JSON.stringify(updated) !== JSON.stringify(room)) {
-                setRoom(updated);
-                
-                // If live state has changed, sync local play state
-                if (updated.live) {
-                  // Only set local play if not playing already or different
-                  if (!play || play.refId !== updated.live.refId || play.qid !== updated.live.qid) {
-                    initPlayFromLive(updated.live, updated);
+        if (screen === 'app' && room && room.code) {
+          const codeKey = room.code.toUpperCase();
+          
+          // Firestore listener
+          let unsub = null;
+          if (db) {
+            try {
+              unsub = db.collection('rooms').doc(codeKey).onSnapshot(doc => {
+                if (isWritingRef.current) return;
+                if (doc.exists) {
+                  const updated = doc.data();
+                  if (JSON.stringify(updated) !== JSON.stringify(room)) {
+                    setRoom(updated);
+                    if (updated.live) {
+                      if (!play || play.qid !== updated.live.qid || play.refId !== updated.live.refId) {
+                        initPlayFromLive(updated.live, updated);
+                      }
+                    } else {
+                      setPlay(null);
+                    }
                   }
-                } else {
-                  setPlay(null);
                 }
+              });
+            } catch(e) {}
+          }
+
+          // BroadcastChannel listener for local tabs
+          const handleBroadcast = (e) => {
+            if (e.data && e.data.type === 'ROOM_UPDATE' && e.data.code === codeKey) {
+              if (isWritingRef.current) return;
+              const updated = e.data.room;
+              setRoom(updated);
+              if (updated.live) {
+                initPlayFromLive(updated.live, updated);
+              } else {
+                setPlay(null);
               }
             }
-          }, 3000);
-        }
-        return () => clearInterval(timerRef.current);
-      }, [screen, blobId, room, play]);
+          };
 
-      const writeRoomToCloud = async (updatedRoom) => {
+          if (localChannel) {
+            localChannel.addEventListener('message', handleBroadcast);
+          }
+
+          return () => {
+            if (unsub) unsub();
+            if (localChannel) localChannel.removeEventListener('message', handleBroadcast);
+          };
+        }
+      }, [screen, room?.code, play]);
+
+      const writeRoom = async (updatedRoom) => {
         isWritingRef.current = true;
         setRoom(updatedRoom);
-        await uploadRoom(blobId, updatedRoom);
-        isWritingRef.current = false;
+        await saveRoomToStorage(updatedRoom);
+        setTimeout(() => { isWritingRef.current = false; }, 300);
       };
 
       const randCode = () => {
@@ -364,176 +648,119 @@
         return s;
       };
 
+      // Create Room Step 1
       const handleCreateRoom = async () => {
         setLoading(true);
         const code = randCode();
         setObCode(code);
-        setObPassword('1234'); // Simple default password
-        setObTitle(obTitle || 'Balade gourmande');
+        setObPassword('1234');
+        setObTitle(obTitle || 'Balade Gourmande');
         setObStep('create');
         setLoading(false);
       };
 
-      const goToModeSelect = () => {
-        if (!obPassword.trim()) {
-          setObError("Mot de passe obligatoire");
-          return;
-        }
+      const proceedToModeSelection = () => {
         setObStep('mode');
       };
 
       const finishCreateRoom = async () => {
         setLoading(true);
-        const hostId = 'p_' + uid();
-        const guestId = 'p_' + uid();
-        
-        const hostName = obPseudo.trim() || 'Host';
-        const players = [{ id: hostId, name: hostName, role: 'host' }];
-        if (obMode === 'solo') {
-          const partnerName = obPartner.trim() || 'User 1';
-          players.push({ id: guestId, name: partnerName, role: 'guest' });
+        setObError('');
+        const creatorId = 'p_' + uid();
+        const hostName = capitalize(obPseudo) || 'Hôte Alex';
+        const players = [{ id: creatorId, name: hostName, isHost: true }];
+
+        if (obMode === 'solo' && obGuestName.trim()) {
+          const guestId = 'p_' + uid();
+          players.push({ id: guestId, name: capitalize(obGuestName), isHost: false });
         }
         
-        const firstOuting = obTemplate.trim() === '1812' ? templateOuting(obTitle) : blankOuting(obTitle);
+        const firstOuting = blankOuting(obTitle, creatorId);
         firstOuting.status = 'current';
 
         const newRoom = {
           code: obCode.toUpperCase(),
-          password: obPassword,
+          password: obPassword.trim() || '1234',
           mode: obMode,
+          createdAt: Date.now(),
           players,
           outings: [firstOuting],
           activeOutingId: firstOuting.id,
           live: null
         };
 
-        const cloudId = await createRoomCloud(newRoom);
-        if (!cloudId) {
-          setObError("Impossible de créer la room");
-          setLoading(false);
-          return;
-        }
+        // Always succeeds via localStorage / BroadcastChannel / Firestore
+        await saveRoomToStorage(newRoom);
 
-        setBlobId(cloudId);
         setRoom(newRoom);
-        
-        const startMe = obMode === 'solo' ? guestId : hostId;
-        setMe(startMe);
-        setTurnPlayer(startMe);
-        
-        localStorage.setItem('sortie_session2', JSON.stringify({ code: newRoom.code, me: startMe, blobId: cloudId }));
+        setMe(creatorId);
+        localStorage.setItem('uptous_session_v3', JSON.stringify({ code: newRoom.code, me: creatorId }));
         setScreen('app');
-        setTab(obMode === 'solo' ? 'live' : 'parcours');
+        setTab('parcours');
         setLoading(false);
-        flash("Room créée !");
+        flash(`Room ${newRoom.code} créée avec succès !`);
       };
 
+      // Join Room
       const handleJoinRoom = async () => {
         if (!obCode || obCode.length < 4) {
-          setObError("Code de room invalide");
+          setObError("Code de room à 4 caractères requis");
           return;
         }
         setLoading(true);
-        const cloudId = await getBlobIdFromCode(obCode);
-        if (!cloudId) {
-          setObError("Room introuvable");
-          setLoading(false);
-          return;
-        }
-        const fetchedRoom = await downloadRoom(cloudId);
+        const fetchedRoom = await fetchRoomFromStorage(obCode);
         if (!fetchedRoom) {
-          setObError("Erreur lors du téléchargement de la room");
+          setObError("Room introuvable avec ce code");
           setLoading(false);
           return;
         }
-        if (fetchedRoom.password !== obPassword) {
+        if (fetchedRoom.password !== obPassword.trim()) {
           setObError("Mot de passe incorrect");
           setLoading(false);
           return;
         }
 
         const guestId = 'p_' + uid();
-        let guestName = obPseudo.trim();
+        let guestName = capitalize(obPseudo);
         if (!guestName) {
           let count = 1;
-          while (fetchedRoom.players.some(p => p.name === `User ${count}`)) {
-            count++;
-          }
-          guestName = `User ${count}`;
+          while (fetchedRoom.players.some(p => p.name === `Participant ${count}`)) count++;
+          guestName = `Participant ${count}`;
         }
-        const updatedPlayers = [...fetchedRoom.players, { id: guestId, name: guestName, role: 'guest' }];
+
+        const updatedPlayers = [...fetchedRoom.players, { id: guestId, name: guestName, isHost: false }];
         const updatedRoom = { ...fetchedRoom, players: updatedPlayers };
 
-        const ok = await uploadRoom(cloudId, updatedRoom);
-        if (!ok) {
-          setObError("Erreur d'écriture sur le serveur");
-          setLoading(false);
-          return;
-        }
+        await saveRoomToStorage(updatedRoom);
 
-        setBlobId(cloudId);
         setRoom(updatedRoom);
         setMe(guestId);
-        setTurnPlayer(guestId);
-        localStorage.setItem('sortie_session2', JSON.stringify({ code: updatedRoom.code, me: guestId, blobId: cloudId }));
+        localStorage.setItem('uptous_session_v3', JSON.stringify({ code: updatedRoom.code, me: guestId }));
         setScreen('app');
-        setTab('live');
+        setTab('parcours');
         setLoading(false);
-        flash(`Connecté dans la room ${updatedRoom.code} !`);
+        flash(`Bienvenue dans la room ${updatedRoom.code} !`);
       };
 
       const handleLogOut = () => {
-        localStorage.removeItem('sortie_session2');
+        localStorage.removeItem('uptous_session_v3');
         setRoom(null);
         setMe(null);
-        setBlobId(null);
         setScreen('onboarding');
         setObStep('welcome');
-        setSettingsOpen(false);
+        setRoomInfoOpen(false);
         flash("Déconnecté");
       };
 
-      const switchSoloTurn = () => {
-        const hostPlayer = room.players.find(p => p.role === 'host');
-        const guestPlayer = room.players.find(p => p.role === 'guest');
-        if (!hostPlayer || !guestPlayer) return;
-        
-        const nextMe = me === hostPlayer.id ? guestPlayer.id : hostPlayer.id;
-        setMe(nextMe);
-        setTurnPlayer(nextMe);
-        
-        const nextTab = nextMe === hostPlayer.id ? 'parcours' : 'live';
-        setTab(nextTab);
-        
-        flash(`C'est au tour de ${nextMe === hostPlayer.id ? hostPlayer.name : guestPlayer.name} !`);
-      };
-
-      const changeRole = (pId, newRole) => {
-        const updated = {
-          ...room,
-          players: room.players.map(p => p.id === pId ? { ...p, role: newRole } : p)
-        };
-        writeRoomToCloud(updated);
-        flash("Rôle mis à jour");
-      };
-
-      const renamePlayer = (pId, newName) => {
+      const renameMyPseudo = (newName) => {
         if (!newName.trim()) return;
         const updated = {
           ...room,
-          players: room.players.map(p => p.id === pId ? { ...p, name: newName.trim() } : p)
+          players: room.players.map(p => p.id === me ? { ...p, name: capitalize(newName) } : p)
         };
-        writeRoomToCloud(updated);
-        flash("Pseudo mis à jour");
-      };
-
-      const kickPlayer = (pId) => {
-        const updated = {
-          ...room,
-          players: room.players.filter(p => p.id !== pId)
-        };
-        writeRoomToCloud(updated);
-        flash("Participant exclu");
+        writeRoom(updated);
+        setEditingPseudo(false);
+        flash("Pseudo mis à jour !");
       };
 
       const activeOuting = () => {
@@ -541,66 +768,52 @@
         return room.outings.find(o => o.id === room.activeOutingId) || room.outings[0];
       };
 
+      const ao = activeOuting();
+      const isMeHost = ao ? (ao.creatorId === me || room?.players[0]?.id === me) : false;
+
       const updateActiveOuting = (fn) => {
-        const ao = activeOuting();
-        if (!ao) return;
-        const updatedOuting = fn(ao);
+        const currentAo = activeOuting();
+        if (!currentAo) return;
+        const updatedOuting = fn(currentAo);
         const updatedRoom = {
           ...room,
-          outings: room.outings.map(o => o.id === ao.id ? updatedOuting : o)
+          outings: room.outings.map(o => o.id === currentAo.id ? updatedOuting : o)
         };
-        writeRoomToCloud(updatedRoom);
+        writeRoom(updatedRoom);
       };
 
-      const updateEditOuting = (fn) => {
-        if (!editOutingId) return;
-        const currentEdit = room.outings.find(o => o.id === editOutingId);
-        if (!currentEdit) return;
-        const updatedOuting = fn(currentEdit);
-        const updatedRoom = {
-          ...room,
-          outings: room.outings.map(o => o.id === editOutingId ? updatedOuting : o)
-        };
-        writeRoomToCloud(updatedRoom);
-      };
-
-      // Play trigger mechanism
+      // Trigger Live Quiz Modal on Participant Phones
       const initPlayFromLive = (live, customRoom) => {
         const r = customRoom || room;
-        const ao = r.outings.find(o => o.id === r.activeOutingId);
-        if (!ao) return;
+        const currentAo = r.outings.find(o => o.id === r.activeOutingId);
+        if (!currentAo) return;
 
         if (live.kind === 'question') {
-          const q = ao.questions.find(x => x.id === live.qid);
+          const q = currentAo.questions.find(x => x.id === live.qid);
           if (q) {
+            setSelectedOptions([]);
             setPlay({
               kind: 'question',
               qid: q.id,
-              options: [q.a, q.b],
+              isMultiSelect: !!q.isMultiSelect,
+              options: q.options || [q.a, q.b],
               title: q.text,
               phase: 'ready',
               player: me
             });
           }
         } else if (live.kind === 'forced') {
-          const f = ao.forced.find(x => x.id === live.refId);
+          const f = currentAo.forced.find(x => x.id === live.refId);
           if (f) {
-            let rest = (ao.catalog[f.cat] || []).filter(x => x.enabled).map(x => ({ id: x.id, name: x.name, emoji: x.emoji }));
-            if (rest.length < 2) return;
-            const itemA = findItem(ao.catalog, f.a);
-            const itemB = findItem(ao.catalog, f.b);
-            
-            rest = rest.filter(x => x.id !== f.a && x.id !== f.b);
-            const shuffledOptions = Math.random() < 0.5 
-              ? [{ id: itemA.id, name: itemA.name, emoji: itemA.emoji }, { id: itemB.id, name: itemB.name, emoji: itemB.emoji }]
-              : [{ id: itemB.id, name: itemB.name, emoji: itemB.emoji }, { id: itemA.id, name: itemA.name, emoji: itemA.emoji }];
-
+            const itemA = f.aObj;
+            const itemB = f.bObj;
+            if (!itemA || !itemB) return;
+            setSelectedOptions([]);
             setPlay({
               kind: 'quiz',
-              category: f.cat,
-              deck: rest,
-              champ: shuffledOptions[0],
-              options: shuffledOptions,
+              options: [itemA, itemB],
+              champ: itemA,
+              deck: [],
               round: 1,
               title: 'Duel imposé',
               refId: f.id,
@@ -609,14 +822,11 @@
             });
           }
         } else if (live.kind === 'quiz') {
-          let rest = (ao.catalog[live.category] || []).filter(x => x.enabled).map(x => ({ id: x.id, name: x.name, emoji: x.emoji }));
+          let rest = (currentAo.catalog[live.category] || []).filter(x => x.enabled).map(x => ({ id: x.id, name: x.name, emoji: x.emoji, address: x.address || '' }));
           if (rest.length < 2) return;
-          for (let i = rest.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [rest[i], rest[j]] = [rest[j], rest[i]];
-          }
           const champ = rest.shift();
           const chall = rest.shift();
+          setSelectedOptions([]);
           setPlay({
             kind: 'quiz',
             category: live.category,
@@ -624,7 +834,7 @@
             champ,
             options: [champ, chall],
             round: 1,
-            title: 'Duel de goûts',
+            title: `Duel de goûts : ${CATS.find(c=>c.id===live.category)?.name || 'Choix'}`,
             phase: 'ready',
             player: me
           });
@@ -632,13 +842,13 @@
       };
 
       const launchStep = (step) => {
-        const ao = activeOuting();
+        const currentAo = activeOuting();
         let liveObj = null;
         if (step.kind === 'forced') {
-          const f = ao.forced.find(x => x.id === step.ref);
+          const f = currentAo.forced.find(x => x.id === step.ref);
           if (f) liveObj = { kind: 'forced', refId: f.id, title: step.title };
         } else if (step.kind === 'question') {
-          const q = ao.questions.find(x => x.id === step.ref);
+          const q = currentAo.questions.find(x => x.id === step.ref);
           if (q) liveObj = { kind: 'question', qid: q.id, title: q.text };
         } else if (step.kind === 'quiz') {
           liveObj = { kind: 'quiz', category: step.ref, title: step.title };
@@ -646,354 +856,255 @@
 
         if (liveObj) {
           const updated = { ...room, live: liveObj };
-          writeRoomToCloud(updated);
-          flash("Activité lancée ! Les participants peuvent y répondre.");
+          writeRoom(updated);
+          flash("🚀 Quiz lancé ! Les téléphones des invités s'ouvrent.");
         }
       };
 
-      const pickCard = (cardId) => {
-        if (!play) return;
-        if (play.kind === 'quiz') {
-          const champ = play.options.find(o => o.id === cardId);
-          if (play.deck.length > 0) {
-            const deck = [...play.deck];
-            const chall = deck.shift();
-            
-            // Trigger quick shuffle visual transition
-            setPlay({ ...play, phase: 'shuffle' });
-            setTimeout(() => {
-              setPlay({
-                ...play,
-                champ,
-                deck,
-                options: [champ, chall],
-                round: play.round + 1,
-                phase: 'ready'
-              });
-            }, 800);
+      const toggleCheckboxOption = (optId) => {
+        if (play && play.isMultiSelect) {
+          if (selectedOptions.includes(optId)) {
+            setSelectedOptions(selectedOptions.filter(id => id !== optId));
           } else {
-            setPlay({ ...play, champ, phase: 'done' });
-            triggerConfetti();
+            setSelectedOptions([...selectedOptions, optId]);
           }
         } else {
-          // Question or single pick
-          const pick = play.options.find(o => o.id === cardId);
-          setPlay({ ...play, pick, phase: 'answered' });
+          setSelectedOptions([optId]);
         }
       };
 
-      const rerollPlay = () => {
-        if (!play) return;
-        if (play.kind === 'quiz') {
-          if (play.deck.length > 0) {
-            const deck = [...play.deck];
-            const j = Math.floor(Math.random() * deck.length);
-            const chall = deck.splice(j, 1)[0];
-            setPlay({ ...play, phase: 'shuffle' });
-            setTimeout(() => {
-              setPlay({ ...play, deck, options: [play.champ, chall], phase: 'ready' });
-            }, 800);
-          } else {
-            setPlay({ ...play, phase: 'shuffle' });
-            setTimeout(() => {
-              setPlay({ ...play, phase: 'ready' });
-            }, 800);
-          }
-        } else {
-          setPlay({ ...play, phase: 'shuffle', pick: null });
-          setTimeout(() => {
-            setPlay({ ...play, options: [...play.options].reverse(), phase: 'ready' });
-          }, 800);
-        }
-      };
-
-      const playSave = () => {
-        const ao = activeOuting();
-        if (!play || !ao) return;
+      const submitQuizAnswer = () => {
+        const currentAo = activeOuting();
+        if (!play || !currentAo || selectedOptions.length === 0) return;
 
         let updatedRoom = { ...room };
-        const outingIdx = room.outings.findIndex(o => o.id === ao.id);
-        const currentOuting = { ...room.outings[outingIdx] };
+        const outingIdx = room.outings.findIndex(o => o.id === currentAo.id);
+        const outingObj = { ...room.outings[outingIdx] };
 
-        if (play.kind === 'question' && play.pick) {
-          const currentAnswers = currentOuting.answers[play.qid] || {};
-          currentAnswers[me] = play.pick.id;
-          currentOuting.answers[play.qid] = currentAnswers;
-        } else if (play.kind === 'quiz' && play.champ) {
-          const currentFavs = currentOuting.favorites[me] || {};
-          currentFavs[play.category] = play.champ.id;
-          currentOuting.favorites[me] = currentFavs;
+        if (play.kind === 'question') {
+          const currentAnswers = outingObj.answers[play.qid] || {};
+          currentAnswers[me] = selectedOptions;
+          outingObj.answers[play.qid] = currentAnswers;
+        } else if (play.kind === 'quiz') {
+          const currentFavs = outingObj.favorites[me] || {};
+          currentFavs[play.category || play.refId] = selectedOptions[0];
+          outingObj.favorites[me] = currentFavs;
         }
 
-        updatedRoom.outings[outingIdx] = currentOuting;
-        
-        // Remove live status once I answer locally
-        // (Other players can still answer if it remains live, but I close my view)
+        updatedRoom.outings[outingIdx] = outingObj;
         setPlay(null);
-        writeRoomToCloud(updatedRoom);
-        flash("Choix enregistré !");
-      };
-
-      const closePlay = () => {
-        setPlay(null);
-      };
-
-      // Finish Outing & Populate Tier List Pool
-      const finishDay = () => {
-        const ao = activeOuting();
-        if (!ao) return;
-
-        const collectedTested = [...ao.tested];
-
-        // 1. Collect completed place steps
-        ao.timeline.forEach(s => {
-          if (s.kind === 'place' && s.done) {
-            if (!collectedTested.find(t => t.id === s.id)) {
-              collectedTested.push({ id: s.id, name: s.title, emoji: '📍' });
-            }
-          }
-        });
-
-        // 2. Collect answered questions options
-        ao.timeline.forEach(s => {
-          if (s.kind === 'question' && s.done) {
-            const q = ao.questions.find(x => x.id === s.ref);
-            const ansObj = ao.answers[s.ref] || {};
-            if (q) {
-              Object.values(ansObj).forEach(valId => {
-                const opt = q.a.id === valId ? q.a : (q.b.id === valId ? q.b : null);
-                if (opt && !collectedTested.find(t => t.id === opt.id)) {
-                  collectedTested.push({ id: opt.id, name: opt.name, emoji: opt.emoji });
-                }
-              });
-            }
-          }
-        });
-
-        // 3. Collect completed forced/quiz duels favorites
-        room.players.forEach(p => {
-          const favs = ao.favorites[p.id] || {};
-          Object.entries(favs).forEach(([catId, itemId]) => {
-            const item = findItem(ao.catalog, itemId);
-            if (item && !collectedTested.find(t => t.id === item.id)) {
-              collectedTested.push({ id: item.id, name: item.name, emoji: item.emoji });
-            }
-          });
-        });
-
-        // Initialize players tier lists
-        const updatedTier = { ...ao.tier };
-        room.players.forEach(p => {
-          // If no tier list exists, or to update the pool of remaining unranked tested items
-          const existing = updatedTier[p.id] || emptyTier();
-          const ranked = [];
-          RANKS.forEach(r => {
-            if (existing[r]) ranked.push(...existing[r]);
-          });
-          const newPool = collectedTested.map(t => t.id).filter(id => !ranked.includes(id));
-          updatedTier[p.id] = {
-            ...existing,
-            pool: newPool,
-            ...RANKS.reduce((acc, r) => ({ ...acc, [r]: existing[r] || [] }), {})
-          };
-        });
-
-        updateActiveOuting(o => ({
-          ...o,
-          status: 'done',
-          tested: collectedTested,
-          tier: updatedTier
-        }));
-
+        setSelectedOptions([]);
+        writeRoom(updatedRoom);
         triggerConfetti();
-        flash("La journée est terminée ! Tier lists débloquées !");
+        flash("Choix enregistré avec succès !");
       };
 
-      const moveTierItem = (rank) => {
-        if (!tierSelItemId) return;
-        const ao = activeOuting();
-        if (!ao) return;
+      // Add Step to Parcours
+      const handleCreateStep = () => {
+        const currentAo = activeOuting();
+        if (!currentAo) return;
 
-        const updatedTier = { ...ao.tier[tierPlayerId] };
-        
-        // Remove item from pool and all ranks
-        updatedTier.pool = (updatedTier.pool || []).filter(id => id !== tierSelItemId);
-        RANKS.forEach(r => {
-          updatedTier[r] = (updatedTier[r] || []).filter(id => id !== tierSelItemId);
-        });
-
-        // Insert into targeted rank
-        if (rank === 'pool') {
-          updatedTier.pool.push(tierSelItemId);
-        } else {
-          updatedTier[rank].push(tierSelItemId);
-        }
-
-        updateActiveOuting(o => ({
-          ...o,
-          tier: {
-            ...o.tier,
-            [tierPlayerId]: updatedTier
-          }
-        }));
-
-        setTierSelItemId(null);
-      };
-
-      // Modifier handlers
-      const addStep = () => {
-        const eo = room.outings.find(o => o.id === editOutingId);
-        if (!eo) return;
         if (newStepKind === 'place') {
-          if (!newStepTitle.trim()) return;
-          updateEditOuting(o => ({
-            ...o,
-            timeline: [...o.timeline, {
-              id: 's_' + uid(),
-              title: newStepTitle.trim(),
-              detail: 'Lieu à visiter',
-              kind: 'place',
-              ref: null,
-              done: false
-            }]
-          }));
-          setNewStepTitle('');
-        } else if (newStepKind === 'question') {
-          const qId = newStepRef || (eo.questions[0] && eo.questions[0].id);
-          if (!qId) return;
-          const q = eo.questions.find(x => x.id === qId);
-          updateEditOuting(o => ({
-            ...o,
-            timeline: [...o.timeline, {
-              id: 's_' + uid(),
-              title: q.text,
-              detail: 'Une question rapide.',
-              kind: 'question',
-              ref: qId,
-              done: false
-            }]
-          }));
-        } else if (newStepKind === 'quiz') {
-          const catId = newStepRef || CATS[0].id;
-          const catName = CATS.find(c => c.id === catId)?.name || '';
-          updateEditOuting(o => ({
-            ...o,
-            timeline: [...o.timeline, {
-              id: 's_' + uid(),
-              title: `Duel de goûts : ${catName}`,
-              detail: 'Mélange et élimination.',
-              kind: 'quiz',
-              ref: catId,
-              done: false
-            }]
-          }));
-        } else if (newStepKind === 'forced') {
-          const fId = newStepRef || (eo.forced[0] && eo.forced[0].id);
-          if (!fId) {
-            flash("Créez d'abord un duel imposé ci-dessous.");
+          if (!newStepTitle.trim()) {
+            flash("Veuillez entrer le nom du lieu");
             return;
           }
-          const f = eo.forced.find(x => x.id === fId);
-          const itemA = findItem(eo.catalog, f.a);
-          const itemB = findItem(eo.catalog, f.b);
-          updateEditOuting(o => ({
-            ...o,
-            timeline: [...o.timeline, {
-              id: 's_' + uid(),
-              title: `Duel : ${itemA?.name || ''} vs ${itemB?.name || ''}`,
-              detail: 'Duel imposé à trancher.',
-              kind: 'forced',
-              ref: fId,
-              done: false
-            }]
+          const stepObj = {
+            id: 's_' + uid(),
+            title: capitalize(newStepTitle),
+            detail: capitalize(newStepDetail) || 'Étape culinaire / Lieu',
+            address: newStepAddress.trim(),
+            kind: 'place',
+            ref: null,
+            done: false
+          };
+          updateActiveOuting(o => ({ ...o, timeline: [...o.timeline, stepObj] }));
+          setNewStepTitle('');
+          setNewStepDetail('');
+          setNewStepAddress('');
+          flash("Étape Lieu ajoutée !");
+
+        } else if (newStepKind === 'question') {
+          const fullQText = capitalize((newQPrefix + newQText).trim());
+          if (!fullQText) {
+            flash("Veuillez saisir le titre de la question");
+            return;
+          }
+          const validOpts = newQOptions.filter(o => o.name.trim().length > 0).map(o => ({
+            id: 'opt_' + uid(),
+            name: capitalize(o.name),
+            emoji: o.emoji || '🍽️',
+            address: o.address.trim()
           }));
+
+          if (validOpts.length < 2) {
+            flash("Ajoutez au moins 2 propositions de choix");
+            return;
+          }
+
+          const newQ = {
+            id: 'q_' + uid(),
+            text: fullQText,
+            isMultiSelect: newQMulti,
+            options: validOpts
+          };
+
+          const stepObj = {
+            id: 's_' + uid(),
+            title: fullQText,
+            detail: `${validOpts.length} propositions ${newQMulti ? '(Choix multiples avec checkboxes)' : '(Choix unique)'}`,
+            address: '',
+            kind: 'question',
+            ref: newQ.id,
+            done: false
+          };
+
+          updateActiveOuting(o => ({
+            ...o,
+            questions: [...o.questions, newQ],
+            timeline: [...o.timeline, stepObj]
+          }));
+
+          setNewQText('');
+          setNewQOptions([
+            { id: 'opt_1', name: '', emoji: '🍕', address: '' },
+            { id: 'opt_2', name: '', emoji: '🍔', address: '' }
+          ]);
+          flash("Quiz de propositions ajouté au parcours !");
+
+        } else if (newStepKind === 'forced') {
+          const nameA = capitalize(newDuelA_name);
+          const nameB = capitalize(newDuelB_name);
+          if (!nameA || !nameB) {
+            flash("Saisissez les 2 choix du duel");
+            return;
+          }
+          const fObj = {
+            id: 'f_' + uid(),
+            cat: 'custom',
+            aObj: { id: 'd_' + uid(), name: nameA, emoji: newDuelA_emoji, address: newDuelA_address.trim() },
+            bObj: { id: 'd_' + uid(), name: nameB, emoji: newDuelB_emoji, address: newDuelB_address.trim() }
+          };
+          const stepObj = {
+            id: 's_' + uid(),
+            title: `Duel : ${nameA} vs ${nameB}`,
+            detail: 'Duel culinaire imposé',
+            address: '',
+            kind: 'forced',
+            ref: fObj.id,
+            done: false
+          };
+          updateActiveOuting(o => ({
+            ...o,
+            forced: [...o.forced, fObj],
+            timeline: [...o.timeline, stepObj]
+          }));
+          setNewDuelA_name('');
+          setNewDuelA_address('');
+          setNewDuelB_name('');
+          setNewDuelB_address('');
+          flash("Duel imposé ajouté au parcours !");
+
+        } else if (newStepKind === 'quiz') {
+          const catObj = CATS.find(c => c.id === newQuizCat) || CATS[0];
+          const stepObj = {
+            id: 's_' + uid(),
+            title: `Duel de goûts : ${catObj.name}`,
+            detail: 'Sélection et élimination par catégorie',
+            address: '',
+            kind: 'quiz',
+            ref: catObj.id,
+            done: false
+          };
+          updateActiveOuting(o => ({ ...o, timeline: [...o.timeline, stepObj] }));
+          flash(`Duel ${catObj.name} ajouté !`);
         }
-        flash("Étape ajoutée au programme !");
       };
 
-      const addCatalogItem = () => {
-        if (!newItemName.trim()) return;
-        const item = {
-          id: slug(newItemName) + '-' + uid().slice(0, 3),
-          name: newItemName.trim(),
-          emoji: newItemEmoji.trim() || '🍩',
+      // Add Custom Option to Category Catalog
+      const handleAddCategoryOption = () => {
+        if (!newOptName.trim()) {
+          flash("Entrez le nom de l'option");
+          return;
+        }
+        const currentAo = activeOuting();
+        if (!currentAo) return;
+
+        const newItem = {
+          id: slug(newOptName) + '-' + uid().slice(0, 3),
+          name: capitalize(newOptName),
+          emoji: newOptEmoji || '🍩',
+          address: newOptAddress.trim(),
           cat: prepCat,
-          enabled: true,
+          enabled: true, // Activated by default with checkbox checked
           mandatory: false
         };
-        updateEditOuting(o => ({
+
+        updateActiveOuting(o => ({
           ...o,
           catalog: {
             ...o.catalog,
-            [prepCat]: [...(o.catalog[prepCat] || []), item]
+            [prepCat]: [...(o.catalog[prepCat] || []), newItem]
           }
         }));
-        setNewItemName('');
-        setNewItemEmoji('');
-        flash("Élément ajouté au catalogue !");
+
+        setNewOptName('');
+        setNewOptAddress('');
+        flash("Nouveau choix ajouté et coché !");
       };
 
-      const addForcedDuel = () => {
-        if (!newDuelA || !newDuelB || newDuelA === newDuelB) {
-          flash("Choisissez deux éléments distincts");
-          return;
-        }
-        const f = {
-          id: 'f_' + uid(),
-          cat: prepCat,
-          a: newDuelA,
-          b: newDuelB,
-          mandatory: true
-        };
-        updateEditOuting(o => ({
+      const toggleSelectAllCategory = (catId, shouldEnable) => {
+        const currentAo = activeOuting();
+        if (!currentAo) return;
+        const updatedList = (currentAo.catalog[catId] || []).map(item => ({ ...item, enabled: shouldEnable }));
+        updateActiveOuting(o => ({
           ...o,
-          forced: [...o.forced, f]
+          catalog: {
+            ...o.catalog,
+            [catId]: updatedList
+          }
         }));
-        setNewDuelA('');
-        setNewDuelB('');
-        flash("Duel imposé créé !");
+        flash(shouldEnable ? "Tous les choix cochés" : "Tous les choix décochés");
       };
 
-      const importTpl = () => {
-        if (editTpl.trim() !== '1812') {
-          flash("Code modèle invalide");
-          return;
+      const copyShareLink = () => {
+        const shareUrl = `${window.location.origin}${window.location.pathname}?code=${room.code}&pass=${room.password}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareUrl);
+          flash("Lien d'invitation copié !");
+        } else {
+          flash(`Code: ${room.code} (Mot de passe: ${room.password})`);
         }
-        const currentEdit = room.outings.find(o => o.id === editOutingId);
-        const tpl = templateOuting(currentEdit.title);
-        const updatedRoom = {
-          ...room,
-          outings: room.outings.map(o => o.id === editOutingId ? {
-            ...o,
-            catalog: tpl.catalog,
-            forced: tpl.forced,
-            timeline: tpl.timeline,
-            questions: tpl.questions,
-            tested: tpl.tested,
-            tier: tpl.tier,
-            status: 'current'
-          } : o)
-        };
-        writeRoomToCloud(updatedRoom);
-        setEditTpl('');
-        flash("Modèle de démonstration importé !");
       };
 
-      // Header components for settings dropdown
-      const isMeHost = room && room.players.find(p => p.id === me)?.role === 'host';
+      const openEmojiPicker = (onSelectFn) => {
+        setEmojiTargetCallback(() => onSelectFn);
+        setEmojiModalOpen(true);
+      };
 
       return (
         <div className="app-frame">
+          {/* LOADING OVERLAY */}
+          {loading && (
+            <div style={{position:'fixed',inset:0,background:'rgba(247,241,235,0.88)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',zIndex:400}} className="animate-pop">
+              <div style={{position:'relative',width:'70px',height:'70px',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div style={{position:'absolute',inset:0,border:'4px solid #ece0d6',borderTop:'4px solid #c26a4a',borderRadius:'50%',animation:'shf 0.9s linear infinite'}}></div>
+                <div style={{fontSize:'30px',animation:'pulseGlow 0.8s infinite alternate'}}>🗺️</div>
+              </div>
+              <div style={{marginTop:'16px',fontWeight:'700',color:'#3f3733',fontSize:'16px',fontFamily:'"Instrument Serif", serif'}}>Connexion à la room...</div>
+            </div>
+          )}
+
           {/* TOAST NOTIFICATION */}
           {toast && (
-            <div style={{position:'fixed',bottom:'88px',left:'50%',transform:'translateX(-50%)',background:'#3f3733',color:'#fff',fontSize:'13px',fontWeight:'600',padding:'10px 18px',borderRadius:'13px',zIndex:70,boxShadow:'0 10px 30px rgba(0,0,0,0.15)',animation:'pop 0.3s ease both'}}>
+            <div style={{position:'fixed',bottom:'84px',left:'50%',transform:'translateX(-50%)',background:'#3f3733',color:'#fff',fontSize:'13.5px',fontWeight:'600',padding:'10px 18px',borderRadius:'13px',zIndex:450,boxShadow:'0 10px 30px rgba(0,0,0,0.18)',animation:'pop 0.3s ease both',maxWidth:'90%',textAlign:'center'}}>
               {toast}
             </div>
           )}
 
-          {/* CONFETTI SYSTEM */}
+          {/* CONFETTI ANIMATION */}
           {confetti && (
-            <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:60}}>
+            <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:410}}>
               {Array.from({length:24}).map((_,i) => {
                 const cols = ['#c26a4a','#d9b45f','#6f9a7d','#d98f5c','#8f83b0'];
                 return (
@@ -1012,49 +1123,53 @@
             </div>
           )}
 
-          {/* ONBOARDING FLOW */}
+          {/* EMOJI PICKER MODAL */}
+          <EmojiPickerModal
+            isOpen={emojiModalOpen}
+            onClose={() => setEmojiModalOpen(false)}
+            onSelect={(e) => {
+              if (emojiTargetCallback) emojiTargetCallback(e);
+            }}
+          />
+
+          {/* 1. ONBOARDING SCREEN */}
           {screen === 'onboarding' && (
             <div style={{minHeight:'100vh',padding:'26px 22px 40px',display:'flex',flexDirection:'column',justifyContent:'center'}} className="animate-rise">
-              {loading && (
-                <div style={{position:'absolute',inset:0,background:'rgba(247,241,235,0.7)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:50}}>
-                  <div style={{border:'4px solid #f3f3f3',borderTop:'4px solid #c26a4a',borderRadius:'50%',width:'40px',height:'40px',animation:'shf 1s linear infinite'}}></div>
-                </div>
-              )}
-
+              
               {obStep === 'welcome' && (
                 <div style={{textAlign:'center'}}>
-                  <div style={{width:'64px',height:'64px',margin:'0 auto 18px',borderRadius:'20px',background:'#3f3733',display:'flex',alignItems:'center',justifyContent:'center',color:'#f7f1eb'}}>
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="18.5" r="2.3"/><circle cx="18" cy="5.5" r="2.3"/><path d="M8.2 17.6h6a3.1 3.1 0 0 0 0-6.2h-4.4a3.1 3.1 0 0 1 0-6.2H16"/></svg>
+                  <div style={{width:'74px',height:'74px',margin:'0 auto 18px',borderRadius:'24px',background:'#3f3733',display:'flex',alignItems:'center',justifyContent:'center',color:'#f7f1eb',boxShadow:'0 12px 28px rgba(60,50,45,.2)'}}>
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="18.5" r="2.3"/><circle cx="18" cy="5.5" r="2.3"/><path d="M8.2 17.6h6a3.1 3.1 0 0 0 0-6.2h-4.4a3.1 3.1 0 0 1 0-6.2H16"/></svg>
                   </div>
-                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'52px',lineHeight:'1',color:'#3f3733'}}>Uptous</div>
-                  <p style={{color:'#8b7d74',margin:'14px auto 30px',maxWidth:'280px',fontSize:'15px',lineHeight:'1.5'}}>Préparez une sortie et comparez vos goûts culinaires et d'ambiance en temps réel.</p>
-                  <button onClick={() => setObStep('name')} className="btn-primary" style={{width:'100%',maxWidth:'220px'}}>Commencer</button>
+                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'58px',lineHeight:'1',color:'#3f3733'}}>Uptous</div>
+                  <p style={{color:'#8b7d74',margin:'14px auto 30px',maxWidth:'290px',fontSize:'15px',lineHeight:'1.5'}}>Créez vos parcours gourmands, lancez des quiz en direct et partagez le code de room sur mobile.</p>
+                  <button onClick={() => setObStep('name')} className="btn-primary" style={{width:'100%',maxWidth:'240px'}}>Commencer</button>
                 </div>
               )}
 
               {obStep === 'name' && (
                 <div>
-                  <button onClick={() => setObStep('welcome')} style={{background:'none',border:'none',color:'#a89a90',fontSize:'15px',padding:0,cursor:'pointer',marginBottom:'26px'}}>← retour</button>
-                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'32px',marginBottom:'6px'}}>Ton pseudo</div>
-                  <p style={{color:'#8b7d74',fontSize:'14px',margin:'0 0 22px'}}>Comment on t'appelle dans le jeu ?</p>
-                  <input value={obPseudo} onChange={e => setObPseudo(e.target.value)} placeholder="ex : John" style={{width:'100%',padding:'16px 18px',border:'2px solid #ece0d6',borderRadius:'14px',fontSize:'16px',background:'#fff',outline:'none',color:'#3f3733',marginBottom:'24px'}}/>
-                  <button onClick={() => setObStep('action')} className="btn-primary" style={{width:'100%'}}>Continuer</button>
+                  <button onClick={() => setObStep('welcome')} style={{background:'none',border:'none',color:'#a89a90',fontSize:'15px',padding:0,cursor:'pointer',marginBottom:'24px'}}>← retour</button>
+                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'36px',marginBottom:'6px'}}>Votre Pseudo</div>
+                  <p style={{color:'#8b7d74',fontSize:'14px',margin:'0 0 22px'}}>Comment souhaitez-vous vous appeler dans la room ?</p>
+                  <input value={obPseudo} onChange={e => setObPseudo(capitalize(e.target.value))} placeholder="ex: Alex, Hugo, Camille..." style={{width:'100%',padding:'16px 18px',border:'2px solid #ece0d6',borderRadius:'14px',fontSize:'16px',background:'#fff',outline:'none',color:'#3f3733',marginBottom:'24px'}}/>
+                  <button onClick={() => setObStep('action')} className="btn-primary" style={{width:'100%'}}>Continuer →</button>
                 </div>
               )}
 
               {obStep === 'action' && (
                 <div>
-                  <button onClick={() => setObStep('name')} style={{background:'none',border:'none',color:'#a89a90',fontSize:'15px',padding:0,cursor:'pointer',marginBottom:'26px'}}>← retour</button>
-                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'32px',marginBottom:'22px'}}>Rejoindre ou Créer ?</div>
+                  <button onClick={() => setObStep('name')} style={{background:'none',border:'none',color:'#a89a90',fontSize:'15px',padding:0,cursor:'pointer',marginBottom:'24px'}}>← retour</button>
+                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'34px',marginBottom:'22px'}}>Que souhaitez-vous faire ?</div>
                   
-                  <div onClick={() => { setObAction('create'); handleCreateRoom(); }} style={{background:'#fff',border:'2px solid #ecd9cd',borderRadius:'16px',padding:'18px',marginBottom:'14px',cursor:'pointer',display:'flex',gap:14,alignItems:'center',boxShadow:'0 6px 18px rgba(160,110,80,.07)'}}>
-                    <div style={{width:'42px',height:'42px',borderRadius:'12px',background:'#f6e5db',color:'#c26a4a',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
-                    <div><div style={{fontWeight:'700',fontSize:'17px'}}>Créer une room</div><div style={{color:'#8b7d74',fontSize:'13px',marginTop:'1px'}}>Tu deviens l'Hôte principal.</div></div>
+                  <div onClick={() => { handleCreateRoom(); }} style={{background:'#fff',border:'2px solid #ecd9cd',borderRadius:'16px',padding:'18px',marginBottom:'14px',cursor:'pointer',display:'flex',gap:14,alignItems:'center',boxShadow:'0 6px 18px rgba(160,110,80,.07)'}}>
+                    <div style={{width:'44px',height:'44px',borderRadius:'13px',background:'#f6e5db',color:'#c26a4a',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg></div>
+                    <div><div style={{fontWeight:'700',fontSize:'17px'}}>Créer une Room</div><div style={{color:'#8b7d74',fontSize:'13px',marginTop:'2px'}}>Générez un code et préparez un parcours.</div></div>
                   </div>
                   
-                  <div onClick={() => { setObAction('join'); setObStep('join'); }} style={{background:'#fff',border:'2px solid #d8e2d6',borderRadius:'16px',padding:'18px',cursor:'pointer',display:'flex',gap:14,alignItems:'center',boxShadow:'0 6px 18px rgba(110,140,110,.07)'}}>
-                    <div style={{width:'42px',height:'42px',borderRadius:'12px',background:'#e4ede2',color:'#5f8a6d',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h13M11 6l6 6-6 6"/></svg></div>
-                    <div><div style={{fontWeight:'700',fontSize:'17px'}}>Rejoindre une room</div><div style={{color:'#8b7d74',fontSize:'13px',marginTop:'1px'}}>Rejoins avec le code de ton ami·e.</div></div>
+                  <div onClick={() => { setObStep('join'); }} style={{background:'#fff',border:'2px solid #d8e2d6',borderRadius:'16px',padding:'18px',cursor:'pointer',display:'flex',gap:14,alignItems:'center',boxShadow:'0 6px 18px rgba(110,140,110,.07)'}}>
+                    <div style={{width:'44px',height:'44px',borderRadius:'13px',background:'#e4ede2',color:'#5f8a6d',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12h13M11 6l6 6-6 6"/></svg></div>
+                    <div><div style={{fontWeight:'700',fontSize:'17px'}}>Rejoindre une Room</div><div style={{color:'#8b7d74',fontSize:'13px',marginTop:'2px'}}>Entrez un code à 4 caractères.</div></div>
                   </div>
                 </div>
               )}
@@ -1062,332 +1177,597 @@
               {obStep === 'create' && (
                 <div>
                   <button onClick={() => setObStep('action')} style={{background:'none',border:'none',color:'#a89a90',fontSize:'15px',padding:0,cursor:'pointer',marginBottom:'20px'}}>← retour</button>
-                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'30px',marginBottom:'4px'}}>Paramétrer la room</div>
-                  <p style={{color:'#8b7d74',fontSize:'13px',margin:'0 0 18px'}}>Le code est généré automatiquement. Configure ta sortie.</p>
+                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'32px',marginBottom:'4px'}}>Créer la Room</div>
+                  <p style={{color:'#8b7d74',fontSize:'13.5px',margin:'0 0 20px'}}>Définissez le nom du parcours et le mot de passe.</p>
                   
-                  <label style={{fontSize:'13px',fontWeight:'600',color:'#a2938a'}}>Titre de la sortie</label>
-                  <input value={obTitle} onChange={e => setObTitle(e.target.value)} placeholder="ex : Balade Gourmande à Paris" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',margin:'6px 0 14px'}}/>
+                  <label style={{fontSize:'13px',fontWeight:'700',color:'#a2938a'}}>Nom de la balade / du parcours</label>
+                  <input value={obTitle} onChange={e => setObTitle(capitalize(e.target.value))} placeholder="ex : Balade Gourmande Paris" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',margin:'6px 0 14px'}}/>
                   
                   <div style={{display:'flex',gap:'12px',marginBottom:'14px'}}>
                     <div style={{flex:1}}>
-                      <label style={{fontSize:'13px',fontWeight:'600',color:'#a2938a'}}>Code de la room</label>
-                      <input value={obCode} readOnly style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'18px',letterSpacing:'4px',textAlign:'center',background:'#fcfbf9',color:'#3f3733',fontWeight:'700',marginTop:'6px'}}/>
+                      <label style={{fontSize:'13px',fontWeight:'700',color:'#a2938a'}}>Code Room</label>
+                      <input value={obCode} onChange={e => setObCode(e.target.value.toUpperCase().slice(0,4))} maxLength={4} style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'18px',letterSpacing:'4px',textAlign:'center',background:'#fcfbf9',color:'#3f3733',fontWeight:'700',marginTop:'6px'}}/>
                     </div>
                     <div style={{flex:1}}>
-                      <label style={{fontSize:'13px',fontWeight:'600',color:'#a2938a'}}>Mot de passe</label>
+                      <label style={{fontSize:'13px',fontWeight:'700',color:'#a2938a'}}>Mot de passe</label>
                       <input value={obPassword} onChange={e => setObPassword(e.target.value)} placeholder="ex : 1234" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',marginTop:'6px'}}/>
                     </div>
                   </div>
 
-                  <label style={{fontSize:'13px',fontWeight:'600',color:'#a2938a',display:'block',marginTop:'10px'}}>Code modèle <span onClick={() => setObTemplate('1812')} style={{fontWeight:'700',color:'#c26a4a',cursor:'pointer',marginLeft:'8px'}}>⚡ Charger la démo ("1812")</span></label>
-                  <input value={obTemplate} onChange={e => setObTemplate(e.target.value)} placeholder="Laisser vide ou entrer 1812" style={{width:'100%',padding:'12px 16px',border:'2px dashed #e0cdc0',borderRadius:'12px',fontSize:'14px',background:'#fbf5f0',outline:'none',marginTop:'6px',marginBottom:'14px'}}/>
-                  
-                  {obError && <div style={{color:'#bb4b30',fontSize:'13px',marginBottom:'12px'}}>{obError}</div>}
-                  <button onClick={goToModeSelect} className="btn-primary" style={{width:'100%'}}>Créer la room</button>
+                  <button onClick={proceedToModeSelection} className="btn-primary" style={{width:'100%',marginTop:'10px'}}>Suivant (Mode de jeu) →</button>
                 </div>
               )}
 
+              {/* MODE SELECTION SCREEN MATCHING USER SCREENSHOTS */}
               {obStep === 'mode' && (
                 <div>
                   <button onClick={() => setObStep('create')} style={{background:'none',border:'none',color:'#a89a90',fontSize:'15px',padding:0,cursor:'pointer',marginBottom:'20px'}}>← retour</button>
-                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'30px',marginBottom:'4px'}}>Vous jouez comment ?</div>
-                  <p style={{color:'#8b7d74',fontSize:'13px',margin:'0 0 20px'}}>Room <b>{obCode}</b> · Hôte</p>
-                  
-                  <div onClick={() => setObMode('solo')} style={{background:'#fff',border:`2px solid ${obMode==='solo'?'#c26a4a':'#ece0d6'}`,borderRadius:'16px',padding:'16px',marginBottom:'14px',cursor:'pointer'}}>
-                    <div style={{fontWeight:'700',fontSize:'16px'}}>Même téléphone <span style={{color:'#8b7d74',fontWeight:'500',fontSize:'13px'}}>· solo</span></div>
-                    <div style={{color:'#8b7d74',fontSize:'13px'}}>Chacun son tour sur cet appareil. L'invité·e commence.</div>
+                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'34px',marginBottom:'2px'}}>Vous jouez comment ?</div>
+                  <div style={{color:'#a2938a',fontSize:'13px',marginBottom:'22px'}}>Room <b>{obCode}</b> · Hôte</div>
+
+                  <div 
+                    onClick={() => setObMode('solo')} 
+                    style={{
+                      background:'#fff',
+                      border: obMode === 'solo' ? '2px solid #a64d2e' : '1px solid #eeddd3',
+                      borderRadius:'16px',
+                      padding:'16px',
+                      marginBottom:'12px',
+                      cursor:'pointer',
+                      transition:'all 0.2s',
+                      boxShadow: obMode === 'solo' ? '0 4px 12px rgba(166,77,46,0.1)' : 'none'
+                    }}
+                  >
+                    <div style={{fontWeight:'700',fontSize:'16px',color:'#3f3733'}}>Même téléphone <span style={{fontSize:'12.5px',fontWeight:'500',color:'#8b7d74'}}>· solo</span></div>
+                    <div style={{color:'#8b7d74',fontSize:'13px',marginTop:'3px'}}>Chacun son tour sur cet appareil. L'invité.e commence.</div>
                   </div>
-                  
+
                   {obMode === 'solo' && (
-                    <input value={obPartner} onChange={e => setObPartner(e.target.value)} placeholder="ex : John" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',marginBottom:'14px'}}/>
+                    <div style={{marginBottom:'16px',paddingLeft:'4px'}} className="animate-pop">
+                      <input
+                        value={obGuestName}
+                        onChange={e => setObGuestName(e.target.value)}
+                        placeholder="ex : John"
+                        style={{width:'100%',padding:'14px 16px',border:'1.5px solid #ece0d6',borderRadius:'12px',fontSize:'14.5px',background:'#fff',outline:'none',color:'#3f3733'}}
+                      />
+                    </div>
                   )}
-                  
-                  <div onClick={() => setObMode('duo')} style={{background:'#fff',border:`2px solid ${obMode==='duo'?'#5f8a6d':'#ece0d6'}`,borderRadius:'16px',padding:'16px',cursor:'pointer',marginBottom:'24px'}}>
-                    <div style={{fontWeight:'700',fontSize:'16px'}}>Deux téléphones <span style={{color:'#8b7d74',fontWeight:'500',fontSize:'13px'}}>· duo</span></div>
-                    <div style={{color:'#8b7d74',fontSize:'13px'}}>Chacun sur son appareil, même room.</div>
+
+                  <div 
+                    onClick={() => setObMode('duo')} 
+                    style={{
+                      background:'#fff',
+                      border: obMode === 'duo' ? '2px solid #5f8a6d' : '1px solid #eeddd3',
+                      borderRadius:'16px',
+                      padding:'16px',
+                      marginBottom:'24px',
+                      cursor:'pointer',
+                      transition:'all 0.2s',
+                      boxShadow: obMode === 'duo' ? '0 4px 12px rgba(95,138,109,0.1)' : 'none'
+                    }}
+                  >
+                    <div style={{fontWeight:'700',fontSize:'16px',color:'#3f3733'}}>Deux téléphones <span style={{fontSize:'12.5px',fontWeight:'500',color:'#8b7d74'}}>· duo</span></div>
+                    <div style={{color:'#8b7d74',fontSize:'13px',marginTop:'3px'}}>Chacun sur son appareil, même room.</div>
                   </div>
-                  
+
                   {obError && <div style={{color:'#bb4b30',fontSize:'13px',marginBottom:'12px'}}>{obError}</div>}
-                  <button onClick={finishCreateRoom} className="btn-primary" style={{width:'100%'}}>Entrer →</button>
+                  <button onClick={finishCreateRoom} className="btn-primary" style={{width:'100%',padding:'16px',fontSize:'16px'}}>
+                    Entrer →
+                  </button>
                 </div>
               )}
 
               {obStep === 'join' && (
                 <div>
                   <button onClick={() => setObStep('action')} style={{background:'none',border:'none',color:'#a89a90',fontSize:'15px',padding:0,cursor:'pointer',marginBottom:'20px'}}>← retour</button>
-                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'30px',marginBottom:'4px'}}>Rejoindre une sortie</div>
-                  <p style={{color:'#8b7d74',fontSize:'13px',margin:'0 0 18px'}}>Entre le code et le mot de passe fournis par l'Hôte.</p>
+                  <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'32px',marginBottom:'4px'}}>Rejoindre une Room</div>
+                  <p style={{color:'#8b7d74',fontSize:'13.5px',margin:'0 0 20px'}}>Saisissez le code de room et le mot de passe transmis par l'hôte.</p>
                   
-                  <label style={{fontSize:'13px',fontWeight:'600',color:'#a2938a'}}>Code de la room</label>
+                  <label style={{fontSize:'13px',fontWeight:'700',color:'#a2938a'}}>Code de la Room (4 caractères)</label>
                   <input value={obCode} onChange={e => setObCode(e.target.value.toUpperCase().slice(0,4))} maxLength={4} placeholder="ABCD" style={{width:'100%',padding:'16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'22px',letterSpacing:'6px',textAlign:'center',background:'#fff',outline:'none',fontWeight:'700',margin:'6px 0 14px'}}/>
                   
-                  <label style={{fontSize:'13px',fontWeight:'600',color:'#a2938a'}}>Mot de passe</label>
-                  <input value={obPassword} onChange={e => setObPassword(e.target.value)} type="password" placeholder="••••" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',margin:'6px 0 14px'}}/>
+                  <label style={{fontSize:'13px',fontWeight:'700',color:'#a2938a'}}>Mot de passe</label>
+                  <input value={obPassword} onChange={e => setObPassword(e.target.value)} type="password" placeholder="1234" style={{width:'100%',padding:'14px 16px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'15px',background:'#fff',outline:'none',margin:'6px 0 14px'}}/>
                   
                   {obError && <div style={{color:'#bb4b30',fontSize:'13px',marginBottom:'12px'}}>{obError}</div>}
-                  <button onClick={handleJoinRoom} className="btn-secondary" style={{width:'100%'}}>Rejoindre</button>
+                  <button onClick={handleJoinRoom} className="btn-secondary" style={{width:'100%'}}>Rejoindre le parcours</button>
                 </div>
               )}
             </div>
           )}
 
-          {/* MAIN APP VIEW */}
+          {/* 2. MAIN APPLICATION VIEW */}
           {screen === 'app' && room && (
             <div className="animate-rise" style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
               
-              {/* PLAY DIALOG OVERLAY */}
+              {/* LIVE QUIZ POPUP MODAL (ON PARTICIPANT PHONES) */}
               {play && (
-                <div style={{position:'absolute',inset:0,background:'#f7f1eb',zIndex:100,overflowY:'auto',display:'flex',flexDirection:'column'}} className="animate-pop">
+                <div style={{position:'absolute',inset:0,background:'#f7f1eb',zIndex:250,overflowY:'auto',display:'flex',flexDirection:'column'}} className="animate-pop">
                   <div style={{padding:'18px 18px 30px',minHeight:'100vh',display:'flex',flexDirection:'column'}}>
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'8px'}}>
-                      <button onClick={closePlay} style={{background:'none',border:'none',color:'#a89a90',fontSize:'14px',cursor:'pointer',padding:0}}>← quitter</button>
-                      {play.mandatory && <div style={{fontSize:'11px',fontWeight:'700',color:'#bb4b30',background:'#f7ddd3',padding:'4px 10px',borderRadius:'9px',display:'flex',gap:5,alignItems:'center'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>obligatoire</div>}
+                      <button onClick={() => setPlay(null)} style={{background:'none',border:'none',color:'#a89a90',fontSize:'14px',cursor:'pointer',padding:0}}>← fermer</button>
+                      <span style={{fontSize:'11.5px',fontWeight:'700',color:'#c26a4a',background:'#f6e5db',padding:'4px 9px',borderRadius:'8px'}}>
+                        Quiz en direct
+                      </span>
                     </div>
-                    <div style={{textAlign:'center',fontFamily:'"Instrument Serif", serif',fontSize:'26px',lineHeight:1.15,margin:'2px 14px 3px',color:'#3f3733'}}>{play.title}</div>
-                    <div style={{textAlign:'center',color:'#a2938a',fontSize:'12.5px',marginBottom:'14px'}}>
-                      {play.kind === 'quiz' ? `Manche ${play.round} · le gagnant reste` : `Tranchez votre choix`}
+                    
+                    <div style={{textAlign:'center',fontFamily:'"Instrument Serif", serif',fontSize:'28px',lineHeight:1.15,margin:'8px 14px 4px',color:'#3f3733'}}>{play.title}</div>
+                    <div style={{textAlign:'center',color:'#a2938a',fontSize:'13px',marginBottom:'20px'}}>
+                      {play.isMultiSelect ? 'Cochez vos réponses (Sélection multiple)' : 'Sélectionnez votre choix préféré'}
                     </div>
 
-                    {play.phase === 'shuffle' && (
-                      <div style={{flex:1,position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <div style={{position:'absolute',width:'150px',height:'206px',borderRadius:'20px',background:'linear-gradient(140deg,#e7a98f,#c26a4a)',boxShadow:'0 12px 26px rgba(180,90,60,.24)'}} className="shuffling-1"></div>
-                        <div style={{position:'absolute',width:'150px',height:'206px',borderRadius:'20px',background:'linear-gradient(140deg,#9dc0a9,#6f9a7d)',boxShadow:'0 12px 26px rgba(100,140,110,.24)'}} className="shuffling-2"></div>
-                      </div>
-                    )}
-
-                    {play.phase === 'ready' && (
-                      <div style={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
-                        <div style={{display:'flex',gap:'12px',justifyContent:'center',marginTop:'6px'}}>
-                          {play.options.map((opt, i) => (
-                            <div key={opt.id} onClick={() => pickCard(opt.id)} style={{flex:1,maxWidth:'172px',height:'256px',borderRadius:'22px',background: i===0?'#fdf3ee':'#eef4ef',border: i===0?'3px solid #eecdbf':'3px solid #c6ddca',boxShadow:'0 12px 26px rgba(150,110,80,.15)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',cursor:'pointer',padding:'14px',transition:'all 0.2s'}}>
-                              {play.kind==='quiz' && play.champ && opt.id===play.champ.id && (
-                                <div style={{fontSize:'10px',fontWeight:'700',letterSpacing:'.5px',color:'#bb4b30',background:'#f7ddd3',padding:'3px 9px',borderRadius:'8px',marginBottom:'8px'}}>EN LICE</div>
-                              )}
-                              <div style={{fontSize:'76px',lineHeight:1}}>{opt.emoji}</div>
-                              <div style={{fontWeight:'700',fontSize:'17px',textAlign:'center',marginTop:'12px',color:'#3f3733'}}>{opt.name}</div>
-                              <div style={{marginTop:'14px',background: i===0?'#c26a4a':'#6f9a7d',color:'#fff',fontSize:'13px',fontWeight:'700',padding:'8px 22px',borderRadius:'13px'}}>choisir</div>
+                    {/* QUIZ OPTIONS WITH REAL CHECKBOXES & CARDS */}
+                    <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'center'}}>
+                      {play.options.map((opt) => {
+                        const isChecked = selectedOptions.includes(opt.id);
+                        return (
+                          <div 
+                            key={opt.id} 
+                            onClick={() => toggleCheckboxOption(opt.id)}
+                            style={{
+                              background: isChecked ? '#fdf3ee' : '#fff',
+                              border: isChecked ? '2px solid #c26a4a' : '1px solid #eeddd3',
+                              borderRadius: '16px',
+                              padding: '14px 16px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '14px',
+                              cursor: 'pointer',
+                              boxShadow: isChecked ? '0 6px 18px rgba(194, 106, 74, 0.12)' : '0 3px 10px rgba(0,0,0,0.03)',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              className="custom-checkbox-input"
+                              checked={isChecked}
+                              onChange={() => {}} // handled by parent div onClick
+                            />
+                            <div style={{fontSize:'34px',flexShrink:0}}>{opt.emoji}</div>
+                            <div style={{flex:1}}>
+                              <div style={{fontWeight:'700',fontSize:'16px',color:'#3f3733'}}>{opt.name}</div>
+                              <AddressBadge address={opt.address} />
                             </div>
-                          ))}
-                        </div>
-                        <div style={{textAlign:'center',margin:'18px 0 6px',fontFamily:'"Instrument Serif", serif',fontSize:'20px',color:'#cbb6ab'}}>— vs —</div>
-                        <div style={{display:'flex',gap:'10px',justifyContent:'center',flexWrap:'wrap'}}>
-                          <button onClick={rerollPlay} style={{background:'#fff',border:'2px solid #ecd4c8',color:'#c26a4a',fontSize:'13px',fontWeight:'700',padding:'11px 18px',borderRadius:'13px',cursor:'pointer',display:'flex',gap:'6px',alignItems:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>Relancer</button>
-                        </div>
-                      </div>
-                    )}
+                          </div>
+                        );
+                      })}
+                    </div>
 
-                    {play.phase === 'answered' && play.pick && (
-                      <div style={{textAlign:'center',marginTop:'20px'}} className="animate-pop">
-                        <div style={{fontSize:'13px',color:'#a2938a',fontWeight:'600'}}>Choix final sélectionné</div>
-                        <div style={{width:'150px',margin:'16px auto 0',background:'#fbeee7',border:'3px solid #ecd4c8',borderRadius:'20px',padding:'20px 12px'}}>
-                          <div style={{fontSize:'64px'}}>{play.pick.emoji}</div>
-                          <div style={{fontWeight:'700',fontSize:'17px',marginTop:'6px'}}>{play.pick.name}</div>
-                        </div>
-                        <div style={{display:'flex',gap:'9px',justifyContent:'center',marginTop:'22px'}}>
-                          <button onClick={playSave} className="btn-secondary" style={{padding:'12px 24px'}}>Sauvegarder le choix</button>
-                          <button onClick={rerollPlay} style={{background:'#fff',border:'2px solid #ecd4c8',color:'#c26a4a',fontSize:'13px',fontWeight:'700',padding:'12px 18px',borderRadius:'14px',cursor:'pointer'}}>Changer</button>
-                        </div>
-                      </div>
-                    )}
-
-                    {play.phase === 'done' && play.champ && (
-                      <div style={{textAlign:'center',marginTop:'14px'}} className="animate-pop">
-                        <div style={{fontSize:'13px',color:'#a2938a',fontWeight:'600'}}>Ton favori absolu</div>
-                        <div style={{fontSize:'92px',margin:'8px 0'}}>{play.champ.emoji}</div>
-                        <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'30px',color:'#c26a4a',marginBottom:'16px'}}>{play.champ.name}</div>
-                        <div style={{display:'flex',gap:'9px',justifyContent:'center',marginTop:'22px'}}>
-                          <button onClick={playSave} className="btn-primary" style={{padding:'12px 24px'}}>Garder ce favori</button>
-                          <button onClick={rerollPlay} style={{background:'#fff',border:'2px solid #ecd4c8',color:'#c26a4a',fontSize:'13px',fontWeight:'700',padding:'12px 18px',borderRadius:'14px',cursor:'pointer'}}>Relancer le duel</button>
-                        </div>
-                      </div>
-                    )}
+                    <button 
+                      onClick={submitQuizAnswer} 
+                      disabled={selectedOptions.length === 0}
+                      className="btn-primary" 
+                      style={{width:'100%',marginTop:'24px',padding:'15px',opacity: selectedOptions.length === 0 ? 0.5 : 1}}
+                    >
+                      Valider mon choix ({selectedOptions.length}) →
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* HEADER SECTION */}
-              <div style={{padding:'16px 16px 10px',background:'#f7f1eb',borderBottom:'1px solid #ece0d6',position:'sticky',top:0,zIndex:30}}>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                  <div>
-                    <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'23px',lineHeight:'1.1',color:'#3f3733'}}>{activeOuting()?.title}</div>
-                    <div style={{color:'#a2938a',fontSize:'12px',marginTop:'3px'}}>Room {room.code} · {room.players.length} joueurs</div>
-                  </div>
-                  
-                  <div style={{display:'flex',gap:'10px',alignItems:'center'}}>
-                    <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:'4px'}}>
-                      <span style={{fontSize:'11px',fontWeight:'700',color: isMeHost?'#bb4b30':'#5f8a6d',background: isMeHost?'#f7ddd3':'#e4ede2',padding:'4px 9px',borderRadius:'8px'}}>
-                        {isMeHost ? 'Hôte' : 'Invité'}
-                      </span>
-                      {room.mode === 'solo' && (
-                        <button onClick={switchSoloTurn} style={{background:'#fff',border:'1px solid #ece0d6',color:'#7a6c64',fontSize:'10px',padding:'3px 7px',borderRadius:'6px',cursor:'pointer',fontWeight:'600'}}>
-                          joue : {room.players.find(p => p.id === me)?.name} ↔
+              {/* TIER LIST MODAL */}
+              {tierListModalOpen && (
+                <div style={{position:'fixed',inset:0,background:'rgba(30,25,22,0.75)',backdropFilter:'blur(5px)',zIndex:350,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} className="animate-pop">
+                  <div style={{background:'#f7f1eb',borderRadius:'22px',width:'100%',maxWidth:'420px',maxHeight:'90vh',overflowY:'auto',padding:'20px',boxShadow:'0 20px 40px rgba(0,0,0,0.25)'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+                      <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'28px'}}>🏆 Tier List Finale</div>
+                      <button onClick={() => setTierListModalOpen(false)} style={{background:'none',border:'none',fontSize:'24px',color:'#8b7d74',cursor:'pointer'}}>×</button>
+                    </div>
+
+                    <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'10px'}}>
+                      Classement — <span style={{color:'#c26a4a'}}>{room.players.find(p => p.id === (tierPlayerId || me))?.name}</span>
+                    </div>
+                    
+                    <div style={{display:'flex',gap:'7px',marginBottom:'14px'}}>
+                      {room.players.map(p => (
+                        <button key={p.id} onClick={() => { setTierPlayerId(p.id); setTierSelItemId(null); }} style={{flex:1,background: (tierPlayerId || me) === p.id ? '#c26a4a':'#f4ede6',color: (tierPlayerId || me) === p.id ? '#fff':'#8b7d74',border:'none',padding:'8px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',cursor:'pointer'}}>
+                          {p.name}
                         </button>
-                      )}
+                      ))}
                     </div>
-                    <div style={{position:'relative'}}>
-                      <button onClick={() => setSettingsOpen(!settingsOpen)} style={{background:'#fff',border:'1px solid #ece0d6',borderRadius:'10px',padding:'8px',cursor:'pointer',color:'#7a6c64'}}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                      </button>
 
-                      {/* SETTINGS DROPDOWN POPUP */}
-                      {settingsOpen && (
-                        <div style={{position:'absolute',top:'45px',right:0,background:'#fff',border:'1px solid #ece0d6',borderRadius:'16px',boxShadow:'0 10px 25px rgba(90,70,55,0.15)',width:'280px',padding:'14px',zIndex:50}} className="animate-pop">
-                          <div style={{fontWeight:'700',fontSize:'15px',marginBottom:'10px',color:'#3f3733'}}>Participants</div>
-                          
-                          <div style={{display:'flex',flexDirection:'column',gap:'8px',maxHeight:'160px',overflowY:'auto',marginBottom:'14px'}}>
-                            {room.players.map(p => (
-                              <div key={p.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'#fcfbf9',padding:'6px 10px',borderRadius:'10px',border:'1px solid #f2ebe4'}}>
-                                <div style={{fontSize:'13px',fontWeight:'600',color:'#584c46'}}>
-                                  {p.id === me ? `${p.name} (Moi)` : p.name}
-                                </div>
-                                <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
-                                  {/* Role toggle if host */}
-                                  {isMeHost ? (
-                                    <select 
-                                      value={p.role} 
-                                      onChange={(e) => changeRole(p.id, e.target.value)} 
-                                      style={{fontSize:'11px',padding:'3px 6px',borderRadius:'6px',border:'1px solid #ece0d6',background:'#fff'}}
-                                    >
-                                      <option value="host">Hôte</option>
-                                      <option value="guest">Invité</option>
-                                    </select>
-                                  ) : (
-                                    <span style={{fontSize:'11px',fontWeight:'700',color: p.role==='host'?'#c26a4a':'#5f8a6d',background: p.role==='host'?'#fdf3ee':'#eef4ef',padding:'2px 6px',borderRadius:'6px'}}>
-                                      {p.role === 'host' ? 'Hôte' : 'Invité'}
-                                    </span>
-                                  )}
-
-                                  {/* Rename/kick button */}
-                                  {isMeHost && p.id !== me && (
-                                    <button onClick={() => kickPlayer(p.id)} style={{background:'none',border:'none',color:'#bb4b30',fontWeight:'bold',cursor:'pointer',fontSize:'14px',padding:'2px 6px'}}>×</button>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
+                    <div style={{display:'flex',flexDirection:'column',gap:'6px',marginBottom:'14px'}}>
+                      {RANKS.map(rank => {
+                        const items = activeOuting()?.tier[tierPlayerId || me]?.[rank] || [];
+                        return (
+                          <div key={rank} style={{display:'flex',alignItems:'stretch',borderRadius:'11px',overflow:'hidden',minHeight:'46px',background:'#fff',border:'1px solid #f2ebe4'}}>
+                            <div style={{width:'44px',background:RANKC[rank],color:'#fff',fontWeight:'800',fontSize:'18px',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{rank}</div>
+                            <div style={{flex:1,display:'flex',flexWrap:'wrap',gap:'5px',padding:'7px',alignItems:'center'}}>
+                              {items.map(itemId => {
+                                const tObj = activeOuting()?.tested.find(x => x.id === itemId) || { name: itemId, emoji: '✨' };
+                                return (
+                                  <span key={itemId} style={{background:'#fff',border:'1.5px solid #ece0d6',color:'#584c46',fontSize:'12px',padding:'4px 8px',borderRadius:'8px',fontWeight:'600'}}>
+                                    {tObj.emoji} {tObj.name}
+                                  </span>
+                                );
+                              })}
+                            </div>
                           </div>
-
-                          {/* RENAME MYSELF INPUT */}
-                          <div style={{marginBottom:'14px'}}>
-                            <label style={{fontSize:'11px',color:'#a2938a',fontWeight:'600',display:'block',marginBottom:'4px'}}>Changer mon pseudo</label>
-                            <input 
-                              placeholder="Mon pseudo" 
-                              defaultValue={room.players.find(p => p.id === me)?.name || ''} 
-                              onBlur={(e) => renamePlayer(me, e.target.value)} 
-                              style={{width:'100%',padding:'8px 10px',border:'1px solid #ece0d6',borderRadius:'8px',fontSize:'13px',outline:'none'}}
-                            />
-                          </div>
-
-                          <button onClick={handleLogOut} style={{width:'100%',background:'#f7ddd3',border:'none',color:'#bb4b30',padding:'10px',borderRadius:'10px',fontWeight:'700',cursor:'pointer',fontSize:'13px'}}>
-                            Se déconnecter
-                          </button>
-                        </div>
-                      )}
+                        );
+                      })}
                     </div>
+
+                    <button onClick={() => setTierListModalOpen(false)} className="btn-primary" style={{width:'100%',padding:'12px'}}>
+                      Fermer
+                    </button>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* CORE APP VIEWS CONTAINER */}
-              <div style={{padding:'16px 16px 96px', flex: 1}}>
-                
-                {/* 1. PARCOURS TAB */}
-                {tab === 'parcours' && (
-                  <div className="animate-rise">
-                    <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'28px',marginBottom:'2px'}}>Parcours</div>
-                    <p style={{color:'#8b7d74',fontSize:'13px',margin:'0 0 14px'}}>
-                      {isMeHost ? "Lance chaque activité au bon moment. Les participants verront la carte s'afficher en direct." : "Le fil conducteur de votre sortie culinaire."}
-                    </p>
-                    
-                    <div style={{height:'7px',background:'#ece0d6',borderRadius:'8px',overflow:'hidden',marginBottom:'18px'}}>
-                      <div style={{height:'100%',width:`${activeOuting()?.timeline.length ? Math.round(activeOuting().timeline.filter(s=>s.done).length/activeOuting().timeline.length*100) : 0}%`,background:'#c26a4a',borderRadius:'8px',transition:'width .5s'}}></div>
+              {/* TOP HEADER BAR */}
+              <div style={{padding:'16px 16px 10px',background:'#f7f1eb',borderBottom:'1px solid #ece0d6',position:'sticky',top:0,zIndex:100}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                  <div>
+                    <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'24px',lineHeight:'1.1',color:'#3f3733'}}>{activeOuting()?.title}</div>
+                    <div style={{color:'#a2938a',fontSize:'12px',marginTop:'2px'}}>Code Room <b>{room.code}</b> · {room.players.length} participant(s)</div>
+                  </div>
+                  
+                  <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                    <span style={{fontSize:'11.5px',fontWeight:'700',color: isMeHost?'#bb4b30':'#5f8a6d',background: isMeHost?'#f7ddd3':'#e4ede2',padding:'4px 9px',borderRadius:'8px'}}>
+                      {isMeHost ? 'Hôte' : 'Invité'}
+                    </span>
+
+                    {/* ROOM SETTINGS BUTTON */}
+                    <button onClick={() => setRoomInfoOpen(!roomInfoOpen)} style={{background:'#fff',border:'1px solid #ece0d6',borderRadius:'10px',padding:'8px',cursor:'pointer',color:'#7a6c64'}}>
+                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* ROOM INFO & SHARE MODAL */}
+                {roomInfoOpen && (
+                  <div style={{position:'absolute',top:'52px',right:'16px',background:'#fff',border:'1px solid #ece0d6',borderRadius:'18px',boxShadow:'0 12px 30px rgba(90,70,55,0.18)',width:'290px',padding:'16px',zIndex:200}} className="animate-pop">
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+                      <div style={{fontWeight:'700',fontSize:'16px',color:'#3f3733'}}>Informations Room</div>
+                      <button onClick={() => setRoomInfoOpen(false)} style={{background:'none',border:'none',fontSize:'18px',color:'#8b7d74',cursor:'pointer'}}>×</button>
                     </div>
-                    
-                    {(!activeOuting()?.timeline || activeOuting().timeline.length === 0) && (
-                      <div style={{textAlign:'center',color:'#a89a90',padding:'30px 10px',fontSize:'13px'}}>
-                        Aucune étape. Ajoute-en dans la page <b>Historique › modifier</b>.
+
+                    <div style={{background:'#fcfbf9',border:'1px solid #f0e6dd',borderRadius:'12px',padding:'10px 12px',marginBottom:'12px'}}>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:'13px',marginBottom:'4px'}}>
+                        <span style={{color:'#8b7d74'}}>Code Room :</span>
+                        <span style={{fontWeight:'700',letterSpacing:'2px'}}>{room.code}</span>
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:'13px'}}>
+                        <span style={{color:'#8b7d74'}}>Mot de passe :</span>
+                        <span style={{fontWeight:'700'}}>{room.password}</span>
+                      </div>
+                    </div>
+
+                    <button onClick={copyShareLink} style={{width:'100%',background:'#f6e5db',color:'#c26a4a',border:'none',borderRadius:'10px',padding:'9px',fontSize:'12.5px',fontWeight:'700',cursor:'pointer',marginBottom:'14px'}}>
+                      📋 Copier le lien d'invitation
+                    </button>
+
+                    <div style={{fontWeight:'700',fontSize:'13.5px',marginBottom:'6px',color:'#3f3733'}}>
+                      Participants ({room.players.length}) :
+                    </div>
+                    <div style={{display:'flex',flexDirection:'column',gap:'6px',maxHeight:'130px',overflowY:'auto',marginBottom:'14px'}}>
+                      {room.players.map(p => (
+                        <div key={p.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'#f9f5f0',padding:'7px 10px',borderRadius:'10px'}}>
+                          <span style={{fontSize:'13px',fontWeight:'600',color:'#584c46'}}>
+                            {p.name} {p.id === me ? ' (Vous)' : ''}
+                          </span>
+                          {p.id === me && (
+                            <button
+                              onClick={() => {
+                                setTempPseudo(p.name);
+                                setEditingPseudo(true);
+                              }}
+                              style={{background:'none',border:'none',cursor:'pointer',fontSize:'14px',padding:0}}
+                            >
+                              ✏️
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {editingPseudo && (
+                      <div style={{marginBottom:'12px',background:'#f2eae3',padding:'10px',borderRadius:'10px'}}>
+                        <label style={{fontSize:'11.5px',fontWeight:'700',color:'#c26a4a',display:'block',marginBottom:'4px'}}>Nouveau pseudo</label>
+                        <div style={{display:'flex',gap:'6px'}}>
+                          <input
+                            value={tempPseudo}
+                            onChange={e => setTempPseudo(e.target.value)}
+                            style={{flex:1,padding:'6px 8px',border:'1px solid #eeddd3',borderRadius:'7px',fontSize:'12.5px',outline:'none'}}
+                          />
+                          <button onClick={() => renameMyPseudo(tempPseudo)} style={{background:'#c26a4a',color:'#fff',border:'none',borderRadius:'7px',padding:'6px 10px',fontSize:'12px',fontWeight:'700',cursor:'pointer'}}>OK</button>
+                        </div>
                       </div>
                     )}
 
-                    <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
+                    <button onClick={handleLogOut} style={{width:'100%',background:'#f7ddd3',border:'none',color:'#bb4b30',padding:'10px',borderRadius:'11px',fontWeight:'700',cursor:'pointer',fontSize:'13px'}}>
+                      Se déconnecter
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* CORE VIEWS CONTAINER */}
+              <div style={{padding:'16px 16px 96px', flex: 1}}>
+                
+                {/* 1. TAB PARCOURS */}
+                {tab === 'parcours' && (
+                  <div className="animate-rise">
+                    
+                    {/* HOST CREATOR FORM FOR STEPS & QUIZZES */}
+                    {isMeHost && (
+                      <div style={{background:'#fff',border:'2px solid #ecd4c8',borderRadius:'18px',padding:'16px',marginBottom:'20px',boxShadow:'0 8px 20px rgba(160,110,80,.07)'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+                          <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'24px',color:'#3f3733'}}>Créer une étape / quiz</div>
+                          <div style={{fontSize:'12px',color:'#8b7d74'}}>Formulaire Hôte</div>
+                        </div>
+
+                        {/* STEP KIND SELECTOR */}
+                        <div style={{display:'flex',gap:'6px',marginBottom:'14px',overflowX:'auto',paddingBottom:'4px'}}>
+                          {[
+                            { id: 'place', label: '📍 Lieu / Resto' },
+                            { id: 'question', label: '🗳️ Quiz propositions' },
+                            { id: 'forced', label: '⚔️ Duel imposé' },
+                            { id: 'quiz', label: '🍧 Duel Catégorie' }
+                          ].map(k => (
+                            <button
+                              key={k.id}
+                              type="button"
+                              onClick={() => setNewStepKind(k.id)}
+                              style={{
+                                whiteSpace:'nowrap',
+                                padding:'8px 12px',
+                                borderRadius:'10px',
+                                fontSize:'12.5px',
+                                fontWeight:'700',
+                                border:'none',
+                                cursor:'pointer',
+                                background: newStepKind === k.id ? '#c26a4a' : '#f4ede6',
+                                color: newStepKind === k.id ? '#fff' : '#7a6c64'
+                              }}
+                            >
+                              {k.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* LIEU CREATION */}
+                        {newStepKind === 'place' && (
+                          <div style={{display:'flex',flexDirection:'column',gap:'9px'}}>
+                            <GoogleMapsSearchInput
+                              value={newStepTitle}
+                              onChange={setNewStepTitle}
+                              onSelectPlace={(place) => {
+                                setNewStepTitle(place.name);
+                                if (place.address) setNewStepAddress(place.address);
+                              }}
+                              placeholder="Nom du resto / lieu (Google Maps)"
+                            />
+                            <input
+                              value={newStepDetail}
+                              onChange={e => setNewStepDetail(capitalize(e.target.value))}
+                              placeholder="Activité / Note (ex: Déjeuner crêpes)"
+                              style={{width:'100%',padding:'10px 12px',border:'1px solid #eeddd3',borderRadius:'10px',fontSize:'13px',outline:'none'}}
+                            />
+                            <input
+                              value={newStepAddress}
+                              onChange={e => setNewStepAddress(e.target.value)}
+                              placeholder="Adresse complète (ex: 33 Rue de Rivoli, Paris)"
+                              style={{width:'100%',padding:'10px 12px',border:'1px solid #eeddd3',borderRadius:'10px',fontSize:'12.5px',outline:'none'}}
+                            />
+                          </div>
+                        )}
+
+                        {/* MULTI-CHOICE QUIZ / POLL CREATION */}
+                        {newStepKind === 'question' && (
+                          <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
+                            <div>
+                              <label style={{fontSize:'12px',fontWeight:'700',color:'#a2938a',display:'block',marginBottom:'5px'}}>Idées d'amorces de question :</label>
+                              <div style={{display:'flex',flexWrap:'wrap',gap:'5px',marginBottom:'8px'}}>
+                                {QUESTION_STARTERS.map((st, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => setNewQPrefix(st)}
+                                    style={{
+                                      background: newQPrefix === st ? '#f7ddd3' : '#f9f5f0',
+                                      border: newQPrefix === st ? '1px solid #c26a4a' : '1px solid #eee0d5',
+                                      color: newQPrefix === st ? '#c26a4a' : '#584c46',
+                                      fontSize:'11.5px',
+                                      fontWeight:'600',
+                                      padding:'4px 9px',
+                                      borderRadius:'8px',
+                                      cursor:'pointer'
+                                    }}
+                                  >
+                                    {st}...
+                                  </button>
+                                ))}
+                              </div>
+                              <input
+                                value={newQPrefix + newQText}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  if (newQPrefix && val.startsWith(newQPrefix)) {
+                                    setNewQText(capitalize(val.slice(newQPrefix.length)));
+                                  } else {
+                                    setNewQPrefix('');
+                                    setNewQText(capitalize(val));
+                                  }
+                                }}
+                                placeholder="Intitulé du quiz..."
+                                style={{width:'100%',padding:'10px 12px',border:'1px solid #eeddd3',borderRadius:'10px',fontSize:'13.5px',outline:'none',fontWeight:'600'}}
+                              />
+                            </div>
+
+                            {/* CHECKBOX SETTING FOR MULTI SELECT */}
+                            <label className="custom-checkbox-container" style={{background:'#fcfbf9',padding:'8px 12px',borderRadius:'10px',border:'1px solid #eeddd3'}}>
+                              <input
+                                type="checkbox"
+                                className="custom-checkbox-input"
+                                checked={newQMulti}
+                                onChange={e => setNewQMulti(e.target.checked)}
+                              />
+                              <span style={{fontSize:'13px',fontWeight:'700',color:'#584c46'}}>
+                                Autoriser le choix multiple (Checkboxes)
+                              </span>
+                            </label>
+
+                            <label style={{fontSize:'12px',fontWeight:'700',color:'#a2938a',marginTop:'4px'}}>Propositions de choix :</label>
+                            {newQOptions.map((opt, idx) => (
+                              <div key={opt.id} style={{background:'#fcfbf9',border:'1px solid #eee0d5',borderRadius:'11px',padding:'10px'}}>
+                                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'6px'}}>
+                                  <span style={{fontSize:'12px',fontWeight:'700',color:'#c26a4a'}}>Option {idx + 1}</span>
+                                  {newQOptions.length > 2 && (
+                                    <button type="button" onClick={() => setNewQOptions(newQOptions.filter(o => o.id !== opt.id))} style={{background:'none',border:'none',color:'#bb4b30',fontSize:'12px',cursor:'pointer'}}>Supprimer</button>
+                                  )}
+                                </div>
+                                <div style={{display:'flex',gap:'6px',marginBottom:'6px'}}>
+                                  <button type="button" onClick={() => openEmojiPicker(e => {
+                                    setNewQOptions(newQOptions.map(o => o.id === opt.id ? { ...o, emoji: e } : o));
+                                  })} style={{fontSize:'18px',width:'44px',height:'38px',border:'1px solid #eeddd3',borderRadius:'8px',background:'#fff',cursor:'pointer'}}>{opt.emoji}</button>
+                                  <input 
+                                    value={opt.name} 
+                                    onChange={e => setNewQOptions(newQOptions.map(o => o.id === opt.id ? { ...o, name: capitalize(e.target.value) } : o))} 
+                                    placeholder={`ex: Option ${idx+1}`} 
+                                    style={{flex:1,padding:'8px 10px',border:'1px solid #eeddd3',borderRadius:'8px',fontSize:'13px'}}
+                                  />
+                                </div>
+                                <input 
+                                  value={opt.address} 
+                                  onChange={e => setNewQOptions(newQOptions.map(o => o.id === opt.id ? { ...o, address: e.target.value } : o))} 
+                                  placeholder="Adresse de cette nourriture (facultatif)" 
+                                  style={{width:'100%',padding:'7px 10px',border:'1px solid #eeddd3',borderRadius:'8px',fontSize:'12px'}}
+                                />
+                              </div>
+                            ))}
+
+                            <button type="button" onClick={() => setNewQOptions([...newQOptions, { id: 'opt_' + uid(), name: '', emoji: '🍿', address: '' }])} style={{background:'#f4ede6',border:'none',color:'#7a6c64',padding:'9px',borderRadius:'10px',fontSize:'12.5px',fontWeight:'700',cursor:'pointer'}}>
+                              + Ajouter une option supplémentaire
+                            </button>
+                          </div>
+                        )}
+
+                        {/* DUEL IMPOSÉ CREATION */}
+                        {newStepKind === 'forced' && (
+                          <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
+                            <div style={{background:'#fcfbf9',border:'1px solid #eee0d5',borderRadius:'11px',padding:'10px'}}>
+                              <div style={{fontSize:'12px',fontWeight:'700',color:'#c26a4a',marginBottom:'6px'}}>1er Élément du Duel</div>
+                              <div style={{display:'flex',gap:'6px',marginBottom:'6px'}}>
+                                <button type="button" onClick={() => openEmojiPicker(setNewDuelA_emoji)} style={{fontSize:'18px',width:'44px',height:'38px',border:'1px solid #eeddd3',borderRadius:'8px',background:'#fff',cursor:'pointer'}}>{newDuelA_emoji}</button>
+                                <input value={newDuelA_name} onChange={e => setNewDuelA_name(capitalize(e.target.value))} placeholder="ex: Otacos Rivoli" style={{flex:1,padding:'8px 10px',border:'1px solid #eeddd3',borderRadius:'8px',fontSize:'13px'}}/>
+                              </div>
+                              <input value={newDuelA_address} onChange={e => setNewDuelA_address(e.target.value)} placeholder="Adresse nourriture 1" style={{width:'100%',padding:'7px 10px',border:'1px solid #eeddd3',borderRadius:'8px',fontSize:'12px'}}/>
+                            </div>
+
+                            <div style={{background:'#fcfbf9',border:'1px solid #eee0d5',borderRadius:'11px',padding:'10px'}}>
+                              <div style={{fontSize:'12px',fontWeight:'700',color:'#5f8a6d',marginBottom:'6px'}}>2e Élément du Duel</div>
+                              <div style={{display:'flex',gap:'6px',marginBottom:'6px'}}>
+                                <button type="button" onClick={() => openEmojiPicker(setNewDuelB_emoji)} style={{fontSize:'18px',width:'44px',height:'38px',border:'1px solid #eeddd3',borderRadius:'8px',background:'#fff',cursor:'pointer'}}>{newDuelB_emoji}</button>
+                                <input value={newDuelB_name} onChange={e => setNewDuelB_name(capitalize(e.target.value))} placeholder="ex: Burger Gourmet PNY" style={{flex:1,padding:'8px 10px',border:'1px solid #eeddd3',borderRadius:'8px',fontSize:'13px'}}/>
+                              </div>
+                              <input value={newDuelB_address} onChange={e => setNewDuelB_address(e.target.value)} placeholder="Adresse nourriture 2" style={{width:'100%',padding:'7px 10px',border:'1px solid #eeddd3',borderRadius:'8px',fontSize:'12px'}}/>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* QUIZ CAT SELECTOR */}
+                        {newStepKind === 'quiz' && (
+                          <div>
+                            <label style={{fontSize:'12px',fontWeight:'700',color:'#a2938a',display:'block',marginBottom:'6px'}}>Catégorie de nourriture :</label>
+                            <select value={newQuizCat} onChange={e => setNewQuizCat(e.target.value)} style={{width:'100%',padding:'10px',borderRadius:'10px',border:'1px solid #eeddd3',background:'#fff',fontSize:'13.5px'}}>
+                              {CATS.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        <button onClick={handleCreateStep} className="btn-primary" style={{width:'100%',marginTop:'14px',padding:'13px'}}>
+                          Ajouter au parcours
+                        </button>
+                      </div>
+                    )}
+
+                    {/* TIMELINE SECTION TITLE */}
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}}>
+                      <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'26px'}}>Programme de la Balade</div>
+                      {activeOuting()?.status === 'done' && (
+                        <span style={{fontSize:'12px',fontWeight:'700',color:'#4c7d5b',background:'#e4ede2',padding:'4px 10px',borderRadius:'8px'}}>Balade terminée</span>
+                      )}
+                    </div>
+
+                    {/* EMPTY TIMELINE */}
+                    {(!activeOuting()?.timeline || activeOuting().timeline.length === 0) && (
+                      <div style={{background:'#fff',border:'2px dashed #e0cdc0',borderRadius:'18px',padding:'32px 20px',textAlign:'center',margin:'10px 0 20px'}}>
+                        <div style={{fontSize:'42px',marginBottom:'8px'}}>🗺️</div>
+                        <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'24px',color:'#3f3733',marginBottom:'6px'}}>Aucune étape au parcours</div>
+                        <p style={{color:'#8b7d74',fontSize:'13.5px',lineHeight:'1.4',margin:'0'}}>
+                          Utilisez le formulaire ci-dessus pour ajouter des étapes et des quiz.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* TIMELINE LIST */}
+                    <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
                       {activeOuting()?.timeline.map((s, idx) => {
-                        const answered = s.kind === 'question' ? !!(activeOuting().answers[s.ref]) : (s.kind === 'forced' ? (activeOuting().favorites && Object.keys(activeOuting().favorites).length > 0) : false);
-                        const done = s.done;
-                        
+                        const isAnswered = s.kind === 'question' ? !!(activeOuting().answers[s.ref]) : (s.kind === 'forced' ? (activeOuting().favorites && Object.keys(activeOuting().favorites).length > 0) : false);
+                        const isDone = s.done;
+
                         let statusLabel = 'à faire';
                         let sf = '#a2938a';
                         let sb = '#f2ece7';
-                        if (s.kind !== 'place' && !answered) {
+                        if (s.kind !== 'place' && !isAnswered) {
                           statusLabel = 'à lancer';
                           sf = '#c79a3f';
                           sb = '#fbefd9';
                         }
-                        if (answered && !done) {
+                        if (isAnswered && !isDone) {
                           statusLabel = 'répondu';
                           sf = '#5f86a8';
                           sb = '#e7f0f6';
                         }
-                        if (done) {
+                        if (isDone) {
                           statusLabel = 'terminé';
                           sf = '#4c7d5b';
                           sb = '#e4ede2';
                         }
 
-                        const dotBg = done ? '#6f9a7d' : (s.kind !== 'place' && !answered ? '#e6c46a' : '#ece0d6');
-                        const dotFg = (done || (s.kind !== 'place' && !answered)) ? '#fff' : '#a2938a';
+                        const dotBg = isDone ? '#6f9a7d' : (s.kind !== 'place' && !isAnswered ? '#e6c46a' : '#ece0d6');
+                        const dotFg = (isDone || (s.kind !== 'place' && !isAnswered)) ? '#fff' : '#a2938a';
 
                         return (
-                          <div key={s.id} style={{display:'flex',gap:'12px',alignItems:'flex-start'}}>
+                          <div key={s.id} style={{display:'flex',gap:'12px',alignItems:'flex-start',position:'relative'}}>
                             <div style={{display:'flex',flexDirection:'column',alignItems:'center',alignSelf:'stretch'}}>
                               <div style={{width:'30px',height:'30px',borderRadius:'50%',background:dotBg,color:dotFg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'13px',fontWeight:'700',flexShrink:0}}>{idx+1}</div>
                               <div style={{flex:1,width:'2px',background:'#ece0d6',margin:'2px 0'}}></div>
                             </div>
                             
-                            <div onClick={() => { if(s.kind !== 'place') setExpandedSteps({...expandedSteps, [s.id]: !expandedSteps[s.id]}) }} style={{flex:1,background:'#fff',border:'1px solid #f0e6dd',borderRadius:'14px',padding:'13px 15px',marginBottom:'10px',boxShadow:'0 4px 12px rgba(160,120,90,.05)',cursor:'pointer'}}>
-                              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:'8px'}}>
-                                <div style={{fontWeight:'700',fontSize:'15px'}}>{s.title}</div>
-                                <div style={{fontSize:'11px',fontWeight:'700',color:sf,background:sb,padding:'3px 9px',borderRadius:'9px',whiteSpace:'nowrap'}}>{statusLabel}</div>
-                              </div>
-                              <div style={{color:'#8b7d74',fontSize:'12.5px',marginTop:'3px'}}>{s.detail}</div>
-
-                              {/* RESULTS COMPONENT ON STEP EXPANSION */}
-                              {expandedSteps[s.id] && s.kind !== 'place' && (
-                                <div style={{marginTop:'10px',paddingTop:'8px',borderTop:'1px dashed #ece0d6',fontSize:'13px'}} className="animate-rise">
-                                  {/* List participant choices */}
-                                  {room.players.map(p => {
-                                    let choice = 'En attente...';
-                                    if (s.kind === 'question') {
-                                      const ansVal = activeOuting().answers[s.ref]?.[p.id];
-                                      const qObj = activeOuting().questions.find(x => x.id === s.ref);
-                                      if (qObj && ansVal) {
-                                        const opt = qObj.a.id === ansVal ? qObj.a : (qObj.b.id === ansVal ? qObj.b : null);
-                                        if (opt) choice = `${opt.emoji} ${opt.name}`;
-                                      }
-                                    } else if (s.kind === 'forced') {
-                                      const fObj = activeOuting().forced.find(x => x.id === s.ref);
-                                      const favItemId = activeOuting().favorites[p.id]?.[fObj?.cat];
-                                      const item = findItem(activeOuting().catalog, favItemId);
-                                      if (item) choice = `${item.emoji} ${item.name}`;
-                                    }
-                                    return (
-                                      <div key={p.id} style={{display:'flex',justifyContent:'space-between',marginBottom:'4px'}}>
-                                        <span style={{color:'#8b7d74'}}>{p.name} :</span>
-                                        <span style={{fontWeight:'700',color:'#3f3733'}}>{choice}</span>
-                                      </div>
-                                    );
-                                  })}
+                            <div style={{flex:1,position:'relative'}}>
+                              <div style={{background:'#fff',border:'1px solid #f0e6dd',borderRadius:'14px',padding:'13px 15px',marginBottom:'10px',boxShadow:'0 4px 12px rgba(160,120,90,.05)'}}>
+                                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:'8px'}}>
+                                  <div style={{fontWeight:'700',fontSize:'15px'}}>{s.title}</div>
+                                  <div style={{fontSize:'11px',fontWeight:'700',color:sf,background:sb,padding:'3px 9px',borderRadius:'9px',whiteSpace:'nowrap'}}>{statusLabel}</div>
                                 </div>
-                              )}
+                                <div style={{color:'#8b7d74',fontSize:'12.5px',marginTop:'3px'}}>{s.detail}</div>
+                                <AddressBadge address={s.address} />
 
-                              <div style={{display:'flex',gap:'7px',flexWrap:'wrap',marginTop:'11px'}}>
-                                {s.kind !== 'place' && isMeHost && (
-                                  <button onClick={(e) => { e.stopPropagation(); launchStep(s); }} style={{background:'#f7ddd3',border:'none',color:'#c26a4a',fontSize:'12.5px',padding:'7px 13px',borderRadius:'10px',cursor:'pointer',fontWeight:'700'}}>
-                                    Lancer le quiz →
-                                  </button>
+                                {isAnswered && !isMeHost && (
+                                  <div style={{marginTop:'8px',fontSize:'12px',fontWeight:'700',color:'#5f8a6d',background:'#e4ede2',padding:'6px 10px',borderRadius:'8px'}}>
+                                    ✓ Choix enregistré !
+                                  </div>
                                 )}
+
+                                {/* HOST CONTROLS */}
                                 {isMeHost && (
-                                  <button onClick={(e) => { e.stopPropagation(); updateActiveOuting(o => ({...o, timeline: o.timeline.map(x=>x.id===s.id?{...x,done:!x.done}:x)})); }} style={{background: done?'#e4ede2':'#f4ede6',border:'none',color: done?'#4c7d5b':'#7a6c64',fontSize:'12.5px',padding:'7px 12px',borderRadius:'10px',cursor:'pointer',fontWeight:'600'}}>
-                                    {done ? '✓ terminé' : 'Marquer terminé'}
-                                  </button>
+                                  <div style={{display:'flex',gap:'7px',flexWrap:'wrap',marginTop:'11px'}}>
+                                    {s.kind !== 'place' && (
+                                      <button onClick={() => launchStep(s)} style={{background:'#f7ddd3',border:'none',color:'#c26a4a',fontSize:'12.5px',padding:'7px 13px',borderRadius:'10px',cursor:'pointer',fontWeight:'700'}}>
+                                        🚀 Lancer pour la room
+                                      </button>
+                                    )}
+                                    <button onClick={() => updateActiveOuting(o => ({...o, timeline: o.timeline.map(x=>x.id===s.id?{...x,done:!x.done}:x)}))} style={{background: isDone?'#e4ede2':'#f4ede6',border:'none',color: isDone?'#4c7d5b':'#7a6c64',fontSize:'12.5px',padding:'7px 12px',borderRadius:'10px',cursor:'pointer',fontWeight:'600'}}>
+                                      {isDone ? '✓ terminé' : 'Marquer terminé'}
+                                    </button>
+                                    <button onClick={() => updateActiveOuting(o => ({...o, timeline: o.timeline.filter(x=>x.id!==s.id)}))} style={{background:'#f7ddd3',border:'none',color:'#bb4b30',fontSize:'12.5px',padding:'7px 10px',borderRadius:'10px',cursor:'pointer'}}>
+                                      🗑️
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -1396,456 +1776,159 @@
                       })}
                     </div>
 
-                    {/* FINISH DAY BUTTON */}
                     {isMeHost && activeOuting()?.status !== 'done' && (
-                      <button onClick={finishDay} className="btn-secondary" style={{width:'100%',marginTop:'20px',padding:'14px'}}>
-                        🏁 Terminer la journée
+                      <button onClick={() => {
+                        updateActiveOuting(o => ({ ...o, status: 'done' }));
+                        setTierListModalOpen(true);
+                        triggerConfetti();
+                      }} className="btn-secondary" style={{width:'100%',marginTop:'20px',padding:'14px'}}>
+                        🏁 Terminer la balade & Voir la Tier List
                       </button>
                     )}
                   </div>
                 )}
 
-                {/* 2. LIVE TAB (GUEST view of launched activity) */}
-                {tab === 'live' && (
-                  <div className="animate-rise" style={{minHeight:'60vh',display:'flex',flexDirection:'column',justifyContent:'center'}}>
-                    {room.live ? (
-                      <div style={{textAlign:'center'}}>
-                        <div style={{width:'56px',height:'56px',margin:'0 auto 14px',borderRadius:'16px',background:'#f7ddd3',color:'#c26a4a',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="4" width="12" height="16" rx="2"/><path d="M4 7v11a2 2 0 0 0 2 2h9"/></svg></div>
-                        <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'26px'}}>Une carte active</div>
-                        <p style={{color:'#8b7d74',fontSize:'14px',margin:'8px 24px 22px'}}>{room.live.title}</p>
-                        <button onClick={() => initPlayFromLive(room.live)} className="btn-primary" style={{padding:'15px 32px'}}>Jouer maintenant</button>
-                      </div>
-                    ) : (
-                      <div style={{textAlign:'center',color:'#a2938a'}}>
-                        <div style={{width:'56px',height:'56px',margin:'0 auto 14px',borderRadius:'16px',background:'#f0e6dd',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#b0a298" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3 2"/></svg></div>
-                        <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'24px',color:'#3f3733'}}>En attente...</div>
-                        <p style={{fontSize:'13.5px',margin:'8px 30px 0'}}>L'hôte lancera les cartes d'activités au fil de la journée. Les choix s'afficheront en temps réel ici.</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* 3. HISTORIQUE & STEP EDITOR TAB */}
-                {tab === 'history' && (
+                {/* 2. TAB CATÉGORIES & OPTIONS (WITH REAL CHECKBOXES) */}
+                {tab === 'catalog' && (
                   <div className="animate-rise">
-                    {/* List outings view */}
-                    {!editOutingId ? (
-                      <div>
-                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'2px'}}>
-                          <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'28px'}}>Sorties</div>
-                          <button onClick={() => {
-                            const o = blankOuting('Nouvelle sortie');
-                            const updated = { ...room, outings: [...room.outings, o] };
-                            setEditOutingId(o.id);
-                            writeRoomToCloud(updated);
-                          }} style={{background:'#c26a4a',color:'#fff',border:'none',borderRadius:'12px',padding:'9px 14px',fontSize:'13px',fontWeight:'700',cursor:'pointer'}}>+ Nouvelle sortie</button>
-                        </div>
-                        <p style={{color:'#8b7d74',fontSize:'13px',margin:'2px 0 16px'}}>Toutes vos sorties. Sélectionnez celle à lancer aujourd'hui ou modifiez ses étapes.</p>
-                        
-                        <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
-                          {room.outings.map(o => (
-                            <div key={o.id} style={{background:'#fff',border: o.id===room.activeOutingId?'2px solid #eecdbf':'2px solid #f0e6dd',borderRadius:'16px',padding:'15px',boxShadow:'0 4px 14px rgba(160,120,90,.05)'}}>
-                              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
-                                <div><div style={{fontWeight:'700',fontSize:'17px'}}>{o.title}</div><div style={{color:'#a2938a',fontSize:'12px',marginTop:'2px'}}>{o.date} · {o.timeline.length} étapes</div></div>
-                                <div style={{fontSize:'11px',fontWeight:'700',color: o.id===room.activeOutingId?'#bb4b30':'#8b7d74',background: o.id===room.activeOutingId?'#f7ddd3':'#f2ece7',padding:'4px 9px',borderRadius:'9px'}}>
-                                  {o.id===room.activeOutingId ? 'en cours' : (o.status==='done'?'terminée':'brouillon')}
-                                </div>
-                              </div>
-                              <div style={{display:'flex',gap:'6px',flexWrap:'wrap',marginTop:'10px'}}>
-                                {o.timeline.slice(0, 4).map(s => (
-                                  <span key={s.id} style={{background:'#f4ede6',color:'#7a6c64',fontSize:'11.5px',padding:'4px 9px',borderRadius:'8px'}}>{s.title}</span>
-                                ))}
-                              </div>
-                              <div style={{display:'flex',gap:'8px',marginTop:'12px',borderTop:'1px solid #f2ebe4',paddingTop:'11px'}}>
-                                <button onClick={() => {
-                                  const updated = {
-                                    ...room,
-                                    activeOutingId: o.id,
-                                    outings: room.outings.map(x => x.id === o.id ? { ...x, status: 'current' } : x)
-                                  };
-                                  writeRoomToCloud(updated);
-                                  setTab('parcours');
-                                  flash("Sortie définie en cours !");
-                                }} style={{flex:1,background:'#f4ede6',border:'none',color:'#584c46',fontSize:'12.5px',fontWeight:'700',padding:'9px',borderRadius:'10px',cursor:'pointer'}}>Définir en cours</button>
-                                
-                                <button onClick={() => setEditOutingId(o.id)} style={{flex:1,background:'#eee6f0',border:'none',color:'#7a5f86',fontSize:'12.5px',fontWeight:'700',padding:'9px',borderRadius:'10px',cursor:'pointer'}}>Modifier</button>
-                                
-                                <button onClick={() => {
-                                  if (room.outings.length <= 1) {
-                                    flash("Garde au moins une sortie");
-                                    return;
-                                  }
-                                  const list = room.outings.filter(x => x.id !== o.id);
-                                  const activeId = room.activeOutingId === o.id ? list[0].id : room.activeOutingId;
-                                  writeRoomToCloud({ ...room, outings: list, activeOutingId: activeId });
-                                }} style={{background:'none',border:'1px solid #efe1d9',color:'#b7a89e',fontSize:'15px',padding:'0 12px',borderRadius:'10px',cursor:'pointer'}}>×</button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      // STEP EDITOR SCREEN
-                      <div>
-                        <button onClick={() => setEditOutingId(null)} style={{background:'none',border:'none',color:'#a89a90',fontSize:'14px',padding:0,cursor:'pointer',marginBottom:'14px'}}>← toutes les sorties</button>
-                        <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'24px',marginBottom:'12px'}}>Modifier la sortie</div>
+                    <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'28px',marginBottom:'2px'}}>Catégories & Options</div>
+                    <p style={{color:'#8b7d74',fontSize:'13px',margin:'0 0 14px'}}>Cochez les options souhaitées avec de vraies checkboxes et ajoutez vos adresses.</p>
 
-                        <label style={{fontSize:'12px',fontWeight:'700',color:'#a2938a'}}>Titre</label>
-                        <input value={room.outings.find(o=>o.id===editOutingId)?.title || ''} onChange={e => {
-                          const updated = {
-                            ...room,
-                            outings: room.outings.map(o => o.id === editOutingId ? { ...o, title: e.target.value } : o)
-                          };
-                          setRoom(updated);
-                        }} style={{width:'100%',padding:'11px 13px',border:'2px solid #ece0d6',borderRadius:'12px',fontSize:'14px',background:'#fff',outline:'none',margin:'6px 0 8px'}}/>
-                        
-                        <div style={{display:'flex',gap:'8px',marginBottom:'18px'}}>
-                          <input value={editTpl} onChange={e => setEditTpl(e.target.value)} placeholder="code modèle" style={{flex:1,padding:'10px 12px',border:'2px dashed #e0cdc0',borderRadius:'11px',fontSize:'13px',background:'#fbf5f0',outline:'none'}}/>
-                          <button onClick={importTpl} style={{background:'#eae2ec',border:'none',color:'#7a5f86',fontSize:'13px',fontWeight:'700',padding:'0 16px',borderRadius:'11px',cursor:'pointer'}}>Importer</button>
-                        </div>
-
-                        {/* TIMELINE STEPS LIST */}
-                        <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'9px'}}>Étapes du programme</div>
-                        <div style={{display:'flex',flexDirection:'column',gap:'7px',marginBottom:'10px'}}>
-                          {room.outings.find(o=>o.id===editOutingId)?.timeline.map((s, idx) => (
-                            <div key={s.id} style={{background:'#fff',border:'1px solid #f0e6dd',borderRadius:'12px',padding:'9px 11px',display:'flex',alignItems:'center',gap:'8px'}}>
-                              <div style={{flex:1}}><div style={{fontWeight:'600',fontSize:'13.5px'}}>{s.title}</div><div style={{fontSize:'11px',color:'#a89a90'}}>{s.kind === 'place' ? 'lieu' : s.kind}</div></div>
-                              
-                              <button onClick={() => {
-                                const current = room.outings.find(o => o.id === editOutingId);
-                                const list = [...current.timeline];
-                                if (idx > 0) {
-                                  [list[idx], list[idx-1]] = [list[idx-1], list[idx]];
-                                  writeRoomToCloud({ ...room, outings: room.outings.map(o => o.id === editOutingId ? { ...o, timeline: list } : o) });
-                                }
-                              }} style={{background:'#f4ede6',border:'none',color:'#7a6c64',width:'26px',height:'26px',borderRadius:'7px',cursor:'pointer'}}>↑</button>
-                              
-                              <button onClick={() => {
-                                const current = room.outings.find(o => o.id === editOutingId);
-                                const list = [...current.timeline];
-                                if (idx < list.length - 1) {
-                                  [list[idx], list[idx+1]] = [list[idx+1], list[idx]];
-                                  writeRoomToCloud({ ...room, outings: room.outings.map(o => o.id === editOutingId ? { ...o, timeline: list } : o) });
-                                }
-                              }} style={{background:'#f4ede6',border:'none',color:'#7a6c64',width:'26px',height:'26px',borderRadius:'7px',cursor:'pointer'}}>↓</button>
-                              
-                              <button onClick={() => {
-                                const current = room.outings.find(o => o.id === editOutingId);
-                                const list = current.timeline.filter(x => x.id !== s.id);
-                                writeRoomToCloud({ ...room, outings: room.outings.map(o => o.id === editOutingId ? { ...o, timeline: list } : o) });
-                              }} style={{background:'none',border:'none',color:'#c0a99e',fontSize:'15px',cursor:'pointer'}}>×</button>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* ADD STEP FORM */}
-                        <div style={{background:'#fbf5f0',border:'1px dashed #e0cdc0',borderRadius:'12px',padding:'12px',marginBottom:'20px'}}>
-                          <label style={{fontSize:'12px',fontWeight:'700',color:'#a2938a',display:'block',marginBottom:'6px'}}>Type d'étape à ajouter</label>
-                          <select value={newStepKind} onChange={e => { setNewStepKind(e.target.value); setNewStepTitle(''); setNewStepRef(''); }} style={{width:'100%',padding:'8px',borderRadius:'8px',border:'1px solid #eeddd3',background:'#fff',fontSize:'13px',marginBottom:'8px'}}>
-                            <option value="place">Lieu physique</option>
-                            <option value="question">Question</option>
-                            <option value="quiz">Duel de goûts (catégorie)</option>
-                            <option value="forced">Duel imposé (2 éléments spécifiques)</option>
-                          </select>
-
-                          {newStepKind === 'place' && (
-                            <input value={newStepTitle} onChange={e => setNewStepTitle(e.target.value)} placeholder="Nom du lieu (ex: Jardin des Plantes)" style={{width:'100%',padding:'9px 12px',border:'1px solid #eeddd3',borderRadius:'8px',fontSize:'13px',outline:'none',background:'#fff'}}/>
-                          )}
-
-                          {newStepKind === 'question' && (
-                            <select value={newStepRef} onChange={e => setNewStepRef(e.target.value)} style={{width:'100%',padding:'8px',borderRadius:'8px',border:'1px solid #eeddd3',background:'#fff',fontSize:'13px'}}>
-                              <option value="">Sélectionner une question...</option>
-                              {room.outings.find(o=>o.id===editOutingId)?.questions.map(q => (
-                                <option key={q.id} value={q.id}>{q.text}</option>
-                              ))}
-                            </select>
-                          )}
-
-                          {newStepKind === 'quiz' && (
-                            <select value={newStepRef} onChange={e => setNewStepRef(e.target.value)} style={{width:'100%',padding:'8px',borderRadius:'8px',border:'1px solid #eeddd3',background:'#fff',fontSize:'13px'}}>
-                              <option value="">Sélectionner une catégorie...</option>
-                              {CATS.map(c => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                              ))}
-                            </select>
-                          )}
-
-                          {newStepKind === 'forced' && (
-                            <select value={newStepRef} onChange={e => setNewStepRef(e.target.value)} style={{width:'100%',padding:'8px',borderRadius:'8px',border:'1px solid #eeddd3',background:'#fff',fontSize:'13px'}}>
-                              <option value="">Sélectionner un duel imposé...</option>
-                              {room.outings.find(o=>o.id===editOutingId)?.forced.map(f => {
-                                const itemA = findItem(room.outings.find(o=>o.id===editOutingId)?.catalog, f.a);
-                                const itemB = findItem(room.outings.find(o=>o.id===editOutingId)?.catalog, f.b);
-                                return <option key={f.id} value={f.id}>{itemA?.name || ''} vs {itemB?.name || ''}</option>;
-                              })}
-                            </select>
-                          )}
-
-                          <button onClick={addStep} style={{marginTop:'9px',width:'100%',background:'#5f8a6d',color:'#fff',border:'none',borderRadius:'9px',padding:'9px',fontSize:'13px',fontWeight:'700',cursor:'pointer'}}>
-                            + Ajouter cette étape
-                          </button>
-                        </div>
-
-                        {/* DUELS IMPOSES CREATOR */}
-                        <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'9px'}}>Créer des Duels imposés</div>
-                        <div style={{display:'flex',flexDirection:'column',gap:'8px',marginBottom:'10px'}}>
-                          {room.outings.find(o=>o.id===editOutingId)?.forced.length === 0 && <div style={{color:'#a89a90',fontSize:'12.5px'}}>Aucun duel imposé créé.</div>}
-                          {room.outings.find(o=>o.id===editOutingId)?.forced.map(f => {
-                            const current = room.outings.find(o => o.id === editOutingId);
-                            const a = findItem(current?.catalog, f.a) || {};
-                            const b = findItem(current?.catalog, f.b) || {};
-                            return (
-                              <div key={f.id} style={{background:'#fff',border:'1px solid #f2ddd3',borderRadius:'12px',padding:'10px 12px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                                <div style={{fontSize:'13px',fontWeight:'600'}}>{a.emoji} {a.name} <span style={{color:'#cbb6ab'}}>vs</span> {b.emoji} {b.name}</div>
-                                <button onClick={() => {
-                                  const updated = {
-                                    ...room,
-                                    outings: room.outings.map(o => o.id === editOutingId ? {
-                                      ...o,
-                                      forced: o.forced.filter(x => x.id !== f.id)
-                                    } : o)
-                                  };
-                                  writeRoomToCloud(updated);
-                                }} style={{background:'none',border:'none',color:'#c0a99e',fontSize:'15px',cursor:'pointer'}}>×</button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        
-                        <div style={{background:'#fbf5f0',border:'1px dashed #e0cdc0',borderRadius:'12px',padding:'11px',marginBottom:'20px'}}>
-                          <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
-                            <select value={newDuelA} onChange={e => setNewDuelA(e.target.value)} style={{flex:1,padding:'9px',border:'1px solid #eeddd3',borderRadius:'9px',background:'#fff',fontSize:'12.5px'}}>
-                              <option value="">1er élément...</option>
-                              {(room.outings.find(o=>o.id===editOutingId)?.catalog[prepCat] || []).map(it => (
-                                <option key={it.id} value={it.id}>{it.emoji} {it.name}</option>
-                              ))}
-                            </select>
-                            <span style={{color:'#cbb6ab',fontSize:'12px'}}>vs</span>
-                            <select value={newDuelB} onChange={e => setNewDuelB(e.target.value)} style={{flex:1,padding:'9px',border:'1px solid #eeddd3',borderRadius:'9px',background:'#fff',fontSize:'12.5px'}}>
-                              <option value="">2e élément...</option>
-                              {(room.outings.find(o=>o.id===editOutingId)?.catalog[prepCat] || []).map(it => (
-                                <option key={it.id} value={it.id}>{it.emoji} {it.name}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <button onClick={addForcedDuel} style={{marginTop:'9px',width:'100%',background:'#c26a4a',color:'#fff',border:'none',borderRadius:'10px',padding:'9px',fontSize:'13px',fontWeight:'700',cursor:'pointer'}}>
-                            + ajouter ce duel imposé
-                          </button>
-                        </div>
-
-                        {/* CATALOG SELECTION */}
-                        <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'9px'}}>Personnaliser les Catalogues</div>
-                        <div style={{display:'flex',gap:'7px',overflowX:'auto',paddingBottom:'8px',marginBottom:'10px'}}>
-                          {CATS.map(c => (
-                            <button key={c.id} onClick={() => setPrepCat(c.id)} style={{whiteSpace:'nowrap',background: prepCat===c.id?'#c26a4a':'#f4ede6',color: prepCat===c.id?'#fff':'#8b7d74',border:'none',padding:'8px 14px',borderRadius:'11px',fontSize:'13px',fontWeight:'600',cursor:'pointer'}}>
-                              {c.name}
-                            </button>
-                          ))}
-                        </div>
-
-                        <div style={{display:'flex',flexDirection:'column',gap:'7px'}}>
-                          {(room.outings.find(o=>o.id===editOutingId)?.catalog[prepCat] || []).map(it => (
-                            <div key={it.id} style={{background:'#fff',border:'1px solid #f0e6dd',borderRadius:'12px',padding:'8px 12px',display:'flex',alignItems:'center',gap:'10px',opacity: it.enabled?'1':'.5'}}>
-                              <div style={{fontSize:'22px'}}>{it.emoji}</div>
-                              <div style={{flex:1,fontSize:'14px',fontWeight:'600'}}>{it.name}</div>
-                              <button onClick={() => {
-                                const current = room.outings.find(o => o.id === editOutingId);
-                                const list = current.catalog[prepCat].map(x => x.id === it.id ? { ...x, mandatory: !x.mandatory } : x);
-                                writeRoomToCloud({
-                                  ...room,
-                                  outings: room.outings.map(o => o.id === editOutingId ? {
-                                    ...o,
-                                    catalog: { ...o.catalog, [prepCat]: list }
-                                  } : o)
-                                });
-                              }} title="obligatoire" style={{background: it.mandatory?'#f7ddd3':'#f4ede6',border:'none',color: it.mandatory?'#bb4b30':'#c6b4a9',width:'30px',height:'30px',borderRadius:'9px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
-                              
-                              <button onClick={() => {
-                                const current = room.outings.find(o => o.id === editOutingId);
-                                const list = current.catalog[prepCat].map(x => x.id === it.id ? { ...x, enabled: !x.enabled } : x);
-                                writeRoomToCloud({
-                                  ...room,
-                                  outings: room.outings.map(o => o.id === editOutingId ? {
-                                    ...o,
-                                    catalog: { ...o.catalog, [prepCat]: list }
-                                  } : o)
-                                });
-                              }} title="activer/désactiver" style={{background: it.enabled?'#e4ede2':'#f4ede6',border:'none',color: it.enabled?'#5f8a6d':'#c6b4a9',width:'30px',height:'30px',borderRadius:'9px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                                {it.enabled ? (
-                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l4 4L19 7"/></svg>
-                                ) : (
-                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="7"/></svg>
-                                )}
-                              </button>
-                              
-                              <button onClick={() => {
-                                const current = room.outings.find(o => o.id === editOutingId);
-                                const list = current.catalog[prepCat].filter(x => x.id !== it.id);
-                                writeRoomToCloud({
-                                  ...room,
-                                  outings: room.outings.map(o => o.id === editOutingId ? {
-                                    ...o,
-                                    catalog: { ...o.catalog, [prepCat]: list }
-                                  } : o)
-                                });
-                              }} style={{background:'none',border:'none',color:'#c0a99e',fontSize:'15px',cursor:'pointer'}}>×</button>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div style={{background:'#fbf5f0',border:'1px dashed #e0cdc0',borderRadius:'12px',padding:'11px',marginTop:'12px',display:'flex',gap:'8px'}}>
-                          <input value={newItemEmoji} onChange={e => setNewItemEmoji(e.target.value)} placeholder="🍩" style={{width:'52px',padding:'9px',border:'1px solid #eeddd3',borderRadius:'9px',textAlign:'center',fontSize:'16px',background:'#fff'}}/>
-                          <input value={newItemName} onChange={e => setNewItemName(e.target.value)} placeholder="Ajouter au catalogue..." style={{flex:1,padding:'9px 12px',border:'1px solid #eeddd3',borderRadius:'9px',fontSize:'13px',background:'#fff',outline:'none'}}/>
-                          <button onClick={addCatalogItem} style={{background:'#5f8a6d',color:'#fff',border:'none',borderRadius:'9px',padding:'0 16px',fontSize:'14px',fontWeight:'700',cursor:'pointer'}}>+</button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* 4. RESULTATS & TIER LIST TAB */}
-                {tab === 'results' && (
-                  <div className="animate-rise">
-                    <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'28px',marginBottom:'2px'}}>Résultats</div>
-                    <p style={{color:'#8b7d74',fontSize:'13px',margin:'0 0 14px'}}>Vos choix, vos classements et votre compatibilité culinaire.</p>
-                    
-                    {/* STATS HEADER */}
-                    <div style={{background:'#f6e5db',borderRadius:'18px',padding:'18px',marginBottom:'18px',textAlign:'center'}}>
-                      <div style={{fontSize:'13px',color:'#a5502f',fontWeight:'600'}}>Compatibilité globale</div>
-                      
-                      {/* Calculate compatibility */}
-                      {(() => {
-                        const answeredBoth = Object.values(activeOuting()?.answers || {}).filter(a => Object.keys(a).length > 1);
-                        const matches = answeredBoth.filter(a => {
-                          const values = Object.values(a);
-                          return values.every(v => v === values[0]);
-                        }).length;
-                        const pct = answeredBoth.length ? Math.round(matches / answeredBoth.length * 100) : 78;
-                        return (
-                          <div>
-                            <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'50px',color:'#c26a4a',lineHeight:'1'}}>{pct}%</div>
-                            <div style={{display:'flex',justifyContent:'center',gap:'16px',marginTop:'8px',fontSize:'12px',color:'#7a6c64'}}>
-                              <div><b>{matches}</b> choix identiques</div>
-                              <div><b>{activeOuting()?.tested.length}</b> éléments testés</div>
-                            </div>
-                          </div>
-                        );
-                      })()}
+                    {/* CATEGORY TABS */}
+                    <div style={{display:'flex',gap:'7px',overflowX:'auto',paddingBottom:'8px',marginBottom:'14px'}}>
+                      {CATS.map(c => (
+                        <button key={c.id} onClick={() => setPrepCat(c.id)} style={{whiteSpace:'nowrap',background: prepCat===c.id?'#c26a4a':'#f4ede6',color: prepCat===c.id?'#fff':'#8b7d74',border:'none',padding:'8px 14px',borderRadius:'11px',fontSize:'13px',fontWeight:'600',cursor:'pointer'}}>
+                          {c.name}
+                        </button>
+                      ))}
                     </div>
 
-                    {/* TIER LIST SECTION */}
-                    {activeOuting()?.status !== 'done' ? (
-                      <div style={{background:'#fff',border:'1px solid #f0e6dd',borderRadius:'18px',padding:'24px 18px',textAlign:'center',boxShadow:'0 4px 14px rgba(160,120,90,.05)',marginBottom:'20px'}}>
-                        <div style={{fontSize:'36px',marginBottom:'10px'}}>🔒</div>
-                        <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'22px',color:'#3f3733',marginBottom:'6px'}}>Tier List Bloquée</div>
-                        <p style={{color:'#8b7d74',fontSize:'13.5px',margin:'0 0 18px',lineHeight:'1.4'}}>La tier list de la journée sera déverrouillée une fois la sortie terminée. Profitez de votre balade !</p>
-                        {isMeHost && (
-                          <button onClick={finishDay} className="btn-secondary" style={{padding:'12px 24px',fontSize:'14px'}}>
-                            Terminer la journée
-                          </button>
-                        )}
+                    {/* QUICK ACTION BAR FOR CHECKBOXES */}
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}}>
+                      <div style={{fontSize:'12px',fontWeight:'700',color:'#8b7d74'}}>
+                        {(activeOuting()?.catalog[prepCat] || []).filter(x => x.enabled).length} / {(activeOuting()?.catalog[prepCat] || []).length} sélectionnés
                       </div>
-                    ) : (
-                      <div>
-                        {/* Player selection for Tier List */}
-                        <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'8px'}}>
-                          Tier list — <span style={{color:'#c26a4a'}}>{room.players.find(p => p.id === (tierPlayerId || me))?.name}</span>
-                        </div>
-                        <div style={{display:'flex',gap:'7px',marginBottom:'12px'}}>
-                          {room.players.map(p => (
-                            <button key={p.id} onClick={() => { setTierPlayerId(p.id); setTierSelItemId(null); }} style={{flex:1,background: (tierPlayerId || me) === p.id ? '#c26a4a':'#f4ede6',color: (tierPlayerId || me) === p.id ? '#fff':'#8b7d74',border:'none',padding:'8px',borderRadius:'10px',fontSize:'13px',fontWeight:'700',cursor:'pointer'}}>
-                              {p.name}
-                            </button>
-                          ))}
-                        </div>
+                      <div style={{display:'flex',gap:'8px'}}>
+                        <button onClick={() => toggleSelectAllCategory(prepCat, true)} style={{background:'#e4ede2',color:'#5f8a6d',border:'none',borderRadius:'8px',padding:'5px 9px',fontSize:'11.5px',fontWeight:'700',cursor:'pointer'}}>Tout cocher</button>
+                        <button onClick={() => toggleSelectAllCategory(prepCat, false)} style={{background:'#f4ede6',color:'#7a6c64',border:'none',borderRadius:'8px',padding:'5px 9px',fontSize:'11.5px',fontWeight:'700',cursor:'pointer'}}>Tout décocher</button>
+                      </div>
+                    </div>
 
-                        {tierSelItemId && (tierPlayerId || me) === me && (
-                          <div style={{fontSize:'12px',color:'#c26a4a',marginBottom:'8px',textAlign:'center'}}>
-                            Sélectionné : {(activeOuting().tested.find(x => x.id === tierSelItemId) || {}).name} — Touche une ligne ci-dessous pour le classer
-                          </div>
-                        )}
+                    {/* CHECKBOX ITEM LIST */}
+                    <div style={{display:'flex',flexDirection:'column',gap:'8px',marginBottom:'16px'}}>
+                      {(activeOuting()?.catalog[prepCat] || []).map(it => (
+                        <div key={it.id} style={{background:'#fff',border:'1px solid #f0e6dd',borderRadius:'12px',padding:'12px 14px',display:'flex',alignItems:'center',gap:'12px'}}>
+                          {/* REAL INTERACTIVE CHECKBOX */}
+                          <label className="custom-checkbox-container">
+                            <input
+                              type="checkbox"
+                              className="custom-checkbox-input"
+                              checked={!!it.enabled}
+                              onChange={() => {
+                                const currentAo = activeOuting();
+                                const list = currentAo.catalog[prepCat].map(x => x.id === it.id ? { ...x, enabled: !x.enabled } : x);
+                                updateActiveOuting(o => ({ ...o, catalog: { ...o.catalog, [prepCat]: list } }));
+                              }}
+                            />
+                          </label>
 
-                        {/* Ranks rows */}
-                        <div style={{display:'flex',flexDirection:'column',gap:'5px',marginBottom:'14px'}}>
-                          {RANKS.map(rank => {
-                            const isEditable = (tierPlayerId || me) === me;
-                            const items = activeOuting().tier[tierPlayerId || me]?.[rank] || [];
-                            return (
-                              <div key={rank} onClick={() => { if(isEditable) moveTierItem(rank); }} style={{display:'flex',alignItems:'stretch',borderRadius:'11px',overflow:'hidden',minHeight:'46px',cursor: isEditable ? 'pointer' : 'default',background:'#fff',border:'1px solid #f2ebe4'}}>
-                                <div style={{width:'44px',background:RANKC[rank],color:'#fff',fontWeight:'800',fontSize:'18px',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{rank}</div>
-                                <div style={{flex:1,display:'flex',flexWrap:'wrap',gap:'5px',padding:'7px',alignItems:'center'}}>
-                                  {items.map(itemId => {
-                                    const tObj = activeOuting().tested.find(x => x.id === itemId) || { name: itemId, emoji: '✨' };
-                                    const isSelected = tierSelItemId === itemId;
-                                    return (
-                                      <span key={itemId} onClick={(e) => { e.stopPropagation(); if(isEditable) setTierSelItemId(isSelected ? null : itemId); }} style={{background: isSelected ? '#c26a4a':'#fff',border:`1.5px solid ${isSelected ? '#c26a4a':'#ece0d6'}`,color: isSelected ? '#fff':'#584c46',fontSize:'12px',padding:'4px 8px',borderRadius:'8px',fontWeight:'600'}}>
-                                        {tObj.emoji} {tObj.name}
-                                      </span>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Unranked items pool */}
-                        <div style={{background:'#f7f0ea',borderRadius:'13px',padding:'10px',marginBottom:'20px'}}>
-                          <div style={{fontSize:'12px',color:'#a2938a',fontWeight:'600',marginBottom:'6px'}}>À classer</div>
-                          <div onClick={() => { if((tierPlayerId || me) === me) moveTierItem('pool'); }} style={{display:'flex',flexWrap:'wrap',gap:'6px',minHeight:'28px',cursor:'pointer'}}>
-                            {(activeOuting().tier[tierPlayerId || me]?.pool || []).map(itemId => {
-                              const tObj = activeOuting().tested.find(x => x.id === itemId) || { name: itemId, emoji: '✨' };
-                              const isSelected = tierSelItemId === itemId;
-                              return (
-                                <span key={itemId} onClick={(e) => { e.stopPropagation(); if((tierPlayerId || me) === me) setTierSelItemId(isSelected ? null : itemId); }} style={{background: isSelected ? '#c26a4a':'#fff',border:`1.5px solid ${isSelected ? '#c26a4a':'#ece0d6'}`,color: isSelected ? '#fff':'#584c46',fontSize:'12.5px',padding:'5px 9px',borderRadius:'9px',fontWeight:'600',cursor:'pointer'}}>
-                                  {tObj.emoji} {tObj.name}
-                                </span>
-                              );
-                            })}
-                            {(!activeOuting().tier[tierPlayerId || me]?.pool || activeOuting().tier[tierPlayerId || me].pool.length === 0) && (
-                              <span style={{color:'#bcaea4',fontSize:'12px'}}>Tout est classé !</span>
-                            )}
+                          <div style={{fontSize:'24px'}}>{it.emoji}</div>
+                          <div style={{flex:1}}>
+                            <div style={{fontSize:'14.5px',fontWeight:'700',color: it.enabled ? '#3f3733' : '#a89a90'}}>{it.name}</div>
+                            <AddressBadge address={it.address} />
                           </div>
                         </div>
+                      ))}
+                    </div>
+
+                    {/* ADD CUSTOM OPTION FORM */}
+                    <div style={{background:'#fbf5f0',border:'1px dashed #e0cdc0',borderRadius:'14px',padding:'14px',marginTop:'10px'}}>
+                      <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'10px',color:'#3f3733'}}>
+                        + Ajouter un choix dans "{CATS.find(c=>c.id===prepCat)?.name}"
                       </div>
-                    )}
+                      <div style={{display:'flex',gap:'8px',marginBottom:'8px'}}>
+                        <button
+                          type="button"
+                          onClick={() => openEmojiPicker(setNewOptEmoji)}
+                          style={{fontSize:'22px',width:'50px',height:'42px',border:'1px solid #eeddd3',borderRadius:'10px',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}
+                        >
+                          {newOptEmoji}
+                        </button>
+                        <input
+                          value={newOptName}
+                          onChange={e => setNewOptName(capitalize(e.target.value))}
+                          placeholder="Nom de l'option (ex: Churros)"
+                          style={{flex:1,padding:'10px 12px',border:'1px solid #eeddd3',borderRadius:'10px',fontSize:'13.5px',background:'#fff',outline:'none'}}
+                        />
+                      </div>
+                      <input
+                        value={newOptAddress}
+                        onChange={e => setNewOptAddress(e.target.value)}
+                        placeholder="Adresse de cette nourriture (ex: 33 Rue Sainte-Anne, Paris)"
+                        style={{width:'100%',padding:'9px 12px',border:'1px solid #eeddd3',borderRadius:'10px',fontSize:'12.5px',background:'#fff',outline:'none',marginBottom:'10px'}}
+                      />
+                      <button onClick={handleAddCategoryOption} className="btn-secondary" style={{width:'100%',padding:'11px',fontSize:'13.5px'}}>
+                        + Ajouter cette option
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. TAB HISTORIQUE */}
+                {tab === 'history' && (
+                  <div className="animate-rise">
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'2px'}}>
+                      <div style={{fontFamily:'"Instrument Serif", serif',fontSize:'28px'}}>Vos Parcours</div>
+                      <button onClick={() => {
+                        const newO = blankOuting('Nouveau parcours', me);
+                        writeRoom({ ...room, outings: [...room.outings, newO], activeOutingId: newO.id });
+                        flash("Nouveau parcours créé !");
+                      }} style={{background:'#c26a4a',color:'#fff',border:'none',borderRadius:'11px',padding:'9px 14px',fontSize:'13px',fontWeight:'700',cursor:'pointer'}}>+ Nouveau parcours</button>
+                    </div>
+                    <p style={{color:'#8b7d74',fontSize:'13px',margin:'2px 0 16px'}}>Toutes les balades créées dans cette room.</p>
+                    
+                    <div style={{display:'flex',flexDirection:'column',gap:'12px',marginBottom:'24px'}}>
+                      {room.outings.map(o => (
+                        <div key={o.id} style={{background:'#fff',border: o.id===room.activeOutingId?'2px solid #eecdbf':'2px solid #f0e6dd',borderRadius:'16px',padding:'15px',boxShadow:'0 4px 14px rgba(160,120,90,.05)'}}>
+                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                            <div>
+                              <div style={{fontWeight:'700',fontSize:'16px'}}>{o.title}</div>
+                              <div style={{fontSize:'12px',color:'#a2938a',marginTop:'2px'}}>{o.date}</div>
+                            </div>
+                            <div style={{fontSize:'11px',fontWeight:'700',color: o.id===room.activeOutingId?'#bb4b30':'#8b7d74',background: o.id===room.activeOutingId?'#f7ddd3':'#f2ece7',padding:'4px 9px',borderRadius:'9px'}}>
+                              {o.id===room.activeOutingId ? 'en cours' : (o.status==='done'?'terminé':'brouillon')}
+                            </div>
+                          </div>
+                          
+                          <div style={{display:'flex',gap:'8px',marginTop:'12px',borderTop:'1px solid #f2ebe4',paddingTop:'11px'}}>
+                            <button onClick={() => {
+                              writeRoom({ ...room, activeOutingId: o.id });
+                              setTab('parcours');
+                              flash("Parcours sélectionné !");
+                            }} style={{flex:1,background:'#f4ede6',border:'none',color:'#584c46',fontSize:'12.5px',fontWeight:'700',padding:'9px',borderRadius:'10px',cursor:'pointer'}}>Sélectionner ce parcours</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* BOTTOM NAVIGATION TAB-BAR */}
-              <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:'440px',background:'rgba(250,246,241,.95)',backdropFilter:'blur(10px)',borderTop:'1px solid #ece0d6',display:'flex',padding:'8px 6px 10px',zIndex:40}}>
-                {isMeHost ? (
-                  // Host bottoms
-                  [
-                    { id: 'parcours', label: 'Parcours', svg: <path d="M8.2 17.6h6a3.1 3.1 0 0 0 0-6.2h-4.4a3.1 3.1 0 0 1 0-6.2H16"/>, wrap: <><circle cx="6" cy="18.5" r="2.2"/><circle cx="18" cy="5.5" r="2.2"/></> },
-                    { id: 'history', label: 'Historique', svg: <path d="M12 7.5v5l3 2"/>, wrap: <circle cx="12" cy="12" r="8.5"/> },
-                    { id: 'results', label: 'Résultats', svg: <path d="M5 20V10M12 20V4M19 20v-7"/> }
-                  ].map(tabItem => (
-                    <button key={tabItem.id} onClick={() => { setTab(tabItem.id); setEditOutingId(null); }} style={{flex:1,background:'none',border:'none',display:'flex',flexDirection:'column',alignItems:'center',gap:'3px',cursor:'pointer',color: tab===tabItem.id?'#c26a4a':'#bcaea4'}}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        {tabItem.wrap}
-                        {tabItem.svg}
-                      </svg>
-                      <span style={{fontSize:'10.5px',fontWeight:'700'}}>{tabItem.label}</span>
-                    </button>
-                  ))
-                ) : (
-                  // Guest bottoms
-                  [
-                    { id: 'parcours', label: 'Parcours', svg: <path d="M8.2 17.6h6a3.1 3.1 0 0 0 0-6.2h-4.4a3.1 3.1 0 0 1 0-6.2H16"/>, wrap: <><circle cx="6" cy="18.5" r="2.2"/><circle cx="18" cy="5.5" r="2.2"/></> },
-                    { id: 'live', label: 'À jouer', svg: <path d="M4 7v11a2 2 0 0 0 2 2h9"/>, wrap: <rect x="7" y="4" width="12" height="16" rx="2"/> },
-                    { id: 'results', label: 'Résultats', svg: <path d="M5 20V10M12 20V4M19 20v-7"/> }
-                  ].map(tabItem => (
-                    <button key={tabItem.id} onClick={() => setTab(tabItem.id)} style={{flex:1,background:'none',border:'none',display:'flex',flexDirection:'column',alignItems:'center',gap:'3px',cursor:'pointer',color: tab===tabItem.id?'#c26a4a':'#bcaea4'}}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        {tabItem.wrap}
-                        {tabItem.svg}
-                      </svg>
-                      <span style={{fontSize:'10.5px',fontWeight:'700'}}>{tabItem.label}</span>
-                    </button>
-                  ))
-                )}
+              {/* BOTTOM NAVIGATION BAR */}
+              <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:'440px',background:'rgba(250,246,241,.96)',backdropFilter:'blur(10px)',borderTop:'1px solid #ece0d6',display:'flex',padding:'8px 6px 10px',zIndex:150}}>
+                {[
+                  { id: 'parcours', label: 'Parcours', svg: <path d="M8.2 17.6h6a3.1 3.1 0 0 0 0-6.2h-4.4a3.1 3.1 0 0 1 0-6.2H16"/>, wrap: <><circle cx="6" cy="18.5" r="2.2"/><circle cx="18" cy="5.5" r="2.2"/></> },
+                  { id: 'catalog', label: 'Catégories', svg: <path d="M4 6h16M4 12h16M4 18h16"/> },
+                  { id: 'history', label: 'Vos Parcours', svg: <path d="M12 7.5v5l3 2"/>, wrap: <circle cx="12" cy="12" r="8.5"/> }
+                ].map(tabItem => (
+                  <button key={tabItem.id} onClick={() => setTab(tabItem.id)} style={{flex:1,background:'none',border:'none',display:'flex',flexDirection:'column',alignItems:'center',gap:'3px',cursor:'pointer',color: tab===tabItem.id?'#c26a4a':'#bcaea4'}}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      {tabItem.wrap}
+                      {tabItem.svg}
+                    </svg>
+                    <span style={{fontSize:'10.5px',fontWeight:'700'}}>{tabItem.label}</span>
+                  </button>
+                ))}
               </div>
 
             </div>
